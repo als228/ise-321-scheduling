@@ -15,7 +15,7 @@ param teacher {COURSES} symbolic in PROFESSORS;
 set SLOTS = {p in PATTERNS, b in BLOCKS};
 
 # a lab can start at b only if the next block exists and is also allowed
-set LAB_SLOTS = {(p,b) in SLOTS: b != last(BLOCKS) and (p, next(b)) in SLOTS};
+set LAB_SLOTS = {(p,b) in SLOTS: b != last(BLOCKS) and (p, next(b, BLOCKS)) in SLOTS};
 
 set SECTIONS_OF {f in PROFESSORS} = {c in COURSES: teacher[c] = f};
 
@@ -40,7 +40,7 @@ subject to ScheduleLab {c in LABS}:
 subject to NoRoomClash {r in ROOMS, d in DAYS, b in BLOCKS}:
     sum {c in NONLABS, p in PATTERNS: (p,b) in SLOTS and d in DAYS_OF[p]}
         x[c,r,p,b]
-  + sum {c in LABS, (p,s) in LAB_SLOTS: d in DAYS_OF[p] and (s = b or next(s) = b)}
+  + sum {c in LABS, (p,s) in LAB_SLOTS: d in DAYS_OF[p] and (s = b or next(s, BLOCKS) = b)}
         y[c,r,p,s]
   <= 1;
 
@@ -50,6 +50,6 @@ subject to NoProfClash {f in PROFESSORS, d in DAYS, b in BLOCKS}:
          (p,b) in SLOTS and d in DAYS_OF[p]}
         x[c,r,p,b]
   + sum {c in SECTIONS_OF[f] inter LABS, r in ROOMS, (p,s) in LAB_SLOTS:
-         d in DAYS_OF[p] and (s = b or next(s) = b)}
+         d in DAYS_OF[p] and (s = b or next(s, BLOCKS) = b)}
         y[c,r,p,s]
   <= 1;

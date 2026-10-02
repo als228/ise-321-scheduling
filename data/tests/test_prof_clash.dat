@@ -1,0 +1,11 @@
+# Two rooms available, but both courses taught by P1 and only ONE slot
+# -> NoProfClash should make this infeasible
+set COURSES    := A  B ;
+set LABS       := ;
+set PROFESSORS := P1 ;
+set ROOMS      := R1  R2 ;
+set DAYS       := Mon  Tue  Wed  Thu  Fri ;
+set BLOCKS     := b1 ;
+set PATTERNS   := MW ;
+set DAYS_OF[MW] := Mon Wed ;
+param teacher := A P1   B P1 ;

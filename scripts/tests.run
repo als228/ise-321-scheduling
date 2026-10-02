@@ -1,0 +1,35 @@
+# Run from the project root:   ampl scripts/tests.run
+# (or in the AMPL console:     include scripts/tests.run;)
+
+reset;
+option solver highs;            # or cbc, gurobi, cplex -- any MIP solver
+option solver_msg 0;            # keep the output short
+model models/scheduling.mod;
+
+# ---------- Test 1: feasible instance ----------
+reset data;
+data data/tests/test_base.dat;
+solve;
+printf "\nTEST 1 base             expect: solved      got: %s\n", solve_result;
+printf {c in NONLABS, r in ROOMS, (p,b) in SLOTS: x[c,r,p,b] > 0.5}
+    "   %-4s %-4s %-4s %s\n", c, r, p, b;
+printf {c in LABS, r in ROOMS, (p,b) in LAB_SLOTS: y[c,r,p,b] > 0.5}
+    "   %-4s %-4s %-4s %s + %s  (lab)\n", c, r, p, b, next(b, BLOCKS);
+
+# ---------- Test 2: room clash ----------
+reset data;
+data data/tests/test_room_clash.dat;
+solve;
+printf "\nTEST 2 room clash       expect: infeasible  got: %s\n", solve_result;
+
+# ---------- Test 3: professor clash ----------
+reset data;
+data data/tests/test_prof_clash.dat;
+solve;
+printf "\nTEST 3 prof clash       expect: infeasible  got: %s\n", solve_result;
+
+# ---------- Test 4: lab occupies two blocks ----------
+reset data;
+data data/tests/test_lab_two_blocks.dat;
+solve;
+printf "\nTEST 4 lab two blocks   expect: infeasible  got: %s\n", solve_result;

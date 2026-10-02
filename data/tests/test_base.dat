@@ -1,0 +1,12 @@
+# Feasible tiny instance -- should solve
+set COURSES    := A  B  C  L1 ;
+set LABS       := L1 ;
+set PROFESSORS := P1  P2 ;
+set ROOMS      := R1  R2 ;
+set DAYS       := Mon  Tue  Wed  Thu  Fri ;
+set BLOCKS     := b1  b2  b3 ;
+set PATTERNS   := MW  TR  R ;
+set DAYS_OF[MW] := Mon Wed ;
+set DAYS_OF[TR] := Tue Thu ;
+set DAYS_OF[R]  := Thu ;
+param teacher := A P1   B P1   C P2   L1 P2 ;
