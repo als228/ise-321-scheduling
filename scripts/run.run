@@ -1,0 +1,8 @@
+reset;
+model models/scheduling.mod;
+data data/small_test.dat;
+option solver gurobi; 
+solve;
+display x;
+printf {c in COURSES, r in ROOMS, t in TIMESLOTS: x[c,r,t] > 0.5}
+    "%s,%s,%s\n", c, r, t > output/schedule.csv;

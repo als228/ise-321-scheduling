@@ -1,0 +1,65 @@
+# Sets extracted from Fall 2026 Class Schedule
+# Cross-listed courses (e.g. 334/434) are treated as ONE course since they
+# share a room, instructor, and time. 
+
+set COURSES :=
+  ISE111  ISE112  ISE121  ISE131  ISE132
+  ISE230  ISE240  ISE251  ISE254
+  ISE333  ISE334_434  ISE335_435  ISE358_458  ISE364_464  ISE372_472
+  ISE403  ISE406  ISE407  ISE422  ISE426  ISE429  ISE444
+  ENGR005 ;
+
+set LABS := 
+  ISE112 ISE132 ENGR005 ;
+
+set PROFESSORS :=
+  Akus  Curtis  Khajavirad  Marangos  Nguyen  Nyberg  Onwunta  Pamukcu
+  Peredes  Perevalov  Yang  Zebiane  Zhao  Zimmers  Zuluaga ;
+
+# who is teaching what course
+param instructor :=
+  ISE111      Perevalov
+  ISE112      Marangos
+  ISE121      Perevalov
+  ISE131      Pamukcu
+  ISE132      Pamukcu
+  ISE230      Zebiane
+  ISE240      Zuluaga
+  ISE251      Akus
+  ISE254      Zimmers
+  ISE333      Pamukcu
+  ISE334_434  Peredes
+  ISE335_435  Marangos
+  ISE358_458  Perevalov
+  ISE364_464  Zhao
+  ISE372_472  Nyberg
+  ISE403      Curtis
+  ISE406      Khajavirad
+  ISE407      Onwunta
+  ISE422      Yang
+  ISE426      Khajavirad
+  ISE429      Onwunta
+  ISE444      Nguyen
+  ENGR005     Marangos ;
+
+set ROOMS :=
+  MO121  MO355  MO375  MO451  MO453 ; # should we include online courses?
+
+set BLOCKS := 
+  b0755  b0920  b1045  b1210  b1335  b1500  b1625  b1750  b1915  b2040 ;
+
+set DAYS := 
+  Mon  Tue  Wed  Thu  Fri ;
+
+# we will use patterns for X and Y
+set PATTERNS := 
+  MW  TR  M  T  W  R  F ;
+
+# mapping patterns to days
+set DAYS_OF[MW] := Mon Wed ;
+set DAYS_OF[TR] := Tue Thu ;
+set DAYS_OF[M] := Mon ;
+set DAYS_OF[T] := Tue ;
+set DAYS_OF[W] := Wed ;
+set DAYS_OF[R] := Thu ;
+set DAYS_OF[F] := Fri ;
