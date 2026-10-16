@@ -45,8 +45,8 @@ param instructor :=
 set ROOMS :=
   MO121  MO355  MO375  MO451  MO453 ; # should we include online courses?
 
-set BLOCKS := 
-  b0755  b0920  b1045  b1210  b1335  b1500  b1625  b1750  b1915  b2040 ;
+# There are 10 standard time blocks in the day.
+param K := 10;
 
 set DAYS := 
   Mon  Tue  Wed  Thu  Fri ;
