@@ -1,0 +1,23 @@
+# Allowed patterns -- should be infeasible
+# One room and 2 blocks give only 4 MW/TR slots, and all 5 courses are limited
+# to MW or TR. One-day patterns are free but not allowed, so nothing fits.
+set COURSES    := A  B  C  D  E ;
+set LABS       := ;
+set PROFESSORS := P1  P2  P3  P4  P5 ;
+set ROOMS      := R1 ;
+set DAYS       := Mon  Tue  Wed  Thu  Fri ;
+param K        := 2 ;
+set PATTERNS   := MW  TR  M  T  W  R  F ;
+set DAYS_OF[MW] := Mon Wed ;
+set DAYS_OF[TR] := Tue Thu ;
+set DAYS_OF[M]  := Mon ;
+set DAYS_OF[T]  := Tue ;
+set DAYS_OF[W]  := Wed ;
+set DAYS_OF[R]  := Thu ;
+set DAYS_OF[F]  := Fri ;
+param instructor := A P1   B P2   C P3   D P4   E P5 ;
+set ALLOWED_PATTERNS[A] := MW TR ;
+set ALLOWED_PATTERNS[B] := MW TR ;
+set ALLOWED_PATTERNS[C] := MW TR ;
+set ALLOWED_PATTERNS[D] := MW TR ;
+set ALLOWED_PATTERNS[E] := MW TR ;

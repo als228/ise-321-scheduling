@@ -1,11 +1,12 @@
-# Two rooms available, but both courses taught by P1 and only ONE slot
+# Three rooms available, but all three courses taught by P1, with one pattern
+# and two blocks (the model requires K > 1). Rooms are not the bottleneck.
 # -> NoProfClash should make this infeasible
-set COURSES    := A  B ;
+set COURSES    := A  B  C ;
 set LABS       := ;
 set PROFESSORS := P1 ;
-set ROOMS      := R1  R2 ;
+set ROOMS      := R1  R2  R3 ;
 set DAYS       := Mon  Tue  Wed  Thu  Fri ;
-set BLOCKS     := b1 ;
+param K        := 2 ;
 set PATTERNS   := MW ;
 set DAYS_OF[MW] := Mon Wed ;
-param teacher := A P1   B P1 ;
+param instructor := A P1   B P1   C P1 ;

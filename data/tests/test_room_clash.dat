@@ -1,11 +1,12 @@
-# Two courses, different professors, but only ONE room and ONE slot
+# Three courses, different professors, but only ONE room, one pattern and
+# two blocks (the model requires K > 1). Only two courses fit.
 # -> NoRoomClash should make this infeasible
-set COURSES    := A  B ;
+set COURSES    := A  B  C ;
 set LABS       := ;
-set PROFESSORS := P1  P2 ;
+set PROFESSORS := P1  P2  P3 ;
 set ROOMS      := R1 ;
 set DAYS       := Mon  Tue  Wed  Thu  Fri ;
-set BLOCKS     := b1 ;
+param K        := 2 ;
 set PATTERNS   := MW ;
 set DAYS_OF[MW] := Mon Wed ;
-param teacher := A P1   B P2 ;
+param instructor := A P1   B P2   C P3 ;
