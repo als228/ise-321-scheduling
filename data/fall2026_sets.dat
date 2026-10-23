@@ -17,7 +17,7 @@ set PROFESSORS :=
   Peredes  Perevalov  Yang  Zebiane  Zhao  Zimmers  Zuluaga ;
 
 # who is teaching what course
-param teacher :=
+param instructor :=
   ISE111      Perevalov
   ISE112      Marangos
   ISE121      Perevalov
@@ -63,3 +63,29 @@ set DAYS_OF[T] := Tue ;
 set DAYS_OF[W] := Wed ;
 set DAYS_OF[R] := Thu ;
 set DAYS_OF[F] := Fri ;
+
+# meeting patterns each course may use
+# labs and ISE372_472 meet once a week; every other ISE course is MW or TR
+set ALLOWED_PATTERNS[ISE111]     := MW TR ;
+set ALLOWED_PATTERNS[ISE112]     := M T W R F ;
+set ALLOWED_PATTERNS[ISE121]     := MW TR ;
+set ALLOWED_PATTERNS[ISE131]     := MW TR ;
+set ALLOWED_PATTERNS[ISE132]     := M T W R F ;
+set ALLOWED_PATTERNS[ISE230]     := MW TR ;
+set ALLOWED_PATTERNS[ISE240]     := MW TR ;
+set ALLOWED_PATTERNS[ISE251]     := MW TR ;
+set ALLOWED_PATTERNS[ISE254]     := MW TR ;
+set ALLOWED_PATTERNS[ISE333]     := MW TR ;
+set ALLOWED_PATTERNS[ISE334_434] := MW TR ;
+set ALLOWED_PATTERNS[ISE335_435] := MW TR ;
+set ALLOWED_PATTERNS[ISE358_458] := MW TR ;
+set ALLOWED_PATTERNS[ISE364_464] := MW TR ;
+set ALLOWED_PATTERNS[ISE372_472] := M T W R F ;
+set ALLOWED_PATTERNS[ISE403]     := MW TR ;
+set ALLOWED_PATTERNS[ISE406]     := MW TR ;
+set ALLOWED_PATTERNS[ISE407]     := MW TR ;
+set ALLOWED_PATTERNS[ISE422]     := MW TR ;
+set ALLOWED_PATTERNS[ISE426]     := MW TR ;
+set ALLOWED_PATTERNS[ISE429]     := MW TR ;
+set ALLOWED_PATTERNS[ISE444]     := MW TR ;
+set ALLOWED_PATTERNS[ENGR005]    := M T W R F ;
