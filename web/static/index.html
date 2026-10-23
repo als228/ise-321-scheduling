@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Course Scheduling Model</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%231f4f82'/%3E%3Cpath d='M8 0v16M0 6h16M0 11h16' stroke='white' stroke-width='1'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"></div>
+        <div>
+          <div class="brand-title">Course Scheduling Model</div>
+          <div class="brand-sub">ISE 321 · AMPL integer program</div>
+        </div>
+      </div>
+      <nav class="tabs" role="tablist">
+        <button class="tab" data-view="datasets" role="tab">Datasets</button>
+        <button class="tab" data-view="builder" role="tab">Case builder</button>
+        <button class="tab" data-view="schedule" role="tab">Schedule <span id="tab-badge" class="tab-badge" hidden></span></button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page">
+    <section id="view-datasets" class="view" hidden></section>
+    <section id="view-builder" class="view" hidden></section>
+    <section id="view-schedule" class="view" hidden></section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>
