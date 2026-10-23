@@ -17,7 +17,7 @@ set PROFESSORS :=
   Peredes  Perevalov  Yang  Zebiane  Zhao  Zimmers  Zuluaga ;
 
 # who is teaching what course
-param instructor :=
+param teacher :=
   ISE111      Perevalov
   ISE112      Marangos
   ISE121      Perevalov

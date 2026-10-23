@@ -12,7 +12,7 @@ set DAYS_OF {PATTERNS} within DAYS;
 # ===================== PARAMETERS =====================
 param teacher {COURSES} symbolic in PROFESSORS;
 
-set SLOTS = {p in PATTERNS, b in BLOCKS};
+set SLOTS = {p in PATTERNS, b in BLOCKS };
 
 # a lab can start at b only if the next block exists and is also allowed
 set LAB_SLOTS = {(p,b) in SLOTS: b != last(BLOCKS) and (p, next(b, BLOCKS)) in SLOTS};
