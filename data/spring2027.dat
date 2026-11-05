@@ -1,0 +1,114 @@
+# Spring 2027 ISE schedule - data
+# Source: Spring 2027 Class Schedule v1.8 (Jan 25 - May 7, 2027)
+# Excluded: ACCT 108 (external course), ISE 260 (not taught)
+# Cross-listed courses (e.g. 332/432) are ONE course: same room, instructor, time.
+
+# ===================== COURSES =====================
+set COURSES :=
+  ISE111  ISE121  ISE172  ISE172_L
+  ISE215  ISE216_L1  ISE216_L2  ISE224  ISE226  ISE230
+  ISE240  ISE254  ISE254_W
+  ISE308_408  ISE308_408_L  ISE308_408_W
+  ISE332_432  ISE336_436  ISE339_439  ISE347_447  ISE355_455
+  ISE362_462  ISE365_465  ISE371_471  ISE382_482
+  ISE411  ISE417  ISE418  ISE456 ;
+
+# two-block meetings (1 day/week, 2 consecutive blocks)
+set LABS :=
+  ISE172_L  ISE216_L1  ISE216_L2  ISE254_W  ISE336_436  ISE382_482 ;
+
+# ===================== PEOPLE =====================
+set PROFESSORS :=
+  Akus  Alexandrescu  Curtis  Goldberg  Liza  Marangos  Motsko  Nyberg
+  Pamukcu  Paredes  Perevalov  Ralphs  Shabnam  Terlaky  Tosin  Zimmers  Zuluaga ;
+
+# ===================== ROOMS =====================
+# MO171 = ManTech lab, PA416 = outside Mohler (used by 308/408)
+set ROOMS := MO121  MO171  MO375  MO451  MO453  PA416 ;
+
+# ===================== TIME =====================
+set DAYS := Mon  Tue  Wed  Thu  Fri ;
+
+# 1 = 7:55   2 = 9:20   3 = 10:45   4 = 12:10
+# 5 = 1:35   6 = 3:00   7 = 4:25    8 = 5:50
+param K := 8 ;
+
+set PATTERNS := MW  TR  M  T  W  R  F ;
+
+set DAYS_OF[MW] := Mon Wed ;
+set DAYS_OF[TR] := Tue Thu ;
+set DAYS_OF[M]  := Mon ;
+set DAYS_OF[T]  := Tue ;
+set DAYS_OF[W]  := Wed ;
+set DAYS_OF[R]  := Thu ;
+set DAYS_OF[F]  := Fri ;
+
+# ===================== INSTRUCTORS =====================
+#   course            instructor       current slot in v1.8
+param instructor :=
+  ISE111          Perevalov      # MW  10:45   MO453
+  ISE121          Perevalov      # MW  7:55    MO451
+  ISE172          Ralphs         # TR  1:35    MO451
+  ISE172_L        Ralphs         # F   10:45-1:25  MO121
+  ISE215          Marangos       # MW  9:20    MO453
+  ISE216_L1       Motsko         # T   1:35-4:15   MO171
+  ISE216_L2       Motsko         # W   1:35-4:15   MO171
+  ISE224          Marangos       # TR  9:20    MO453
+  ISE226          Pamukcu        # MW  1:35    MO451
+  ISE230          Tosin          # TR  7:55    MO451   (notes say "230 back to Marangos")
+  ISE240          Shabnam        # MW  12:10   MO451
+  ISE254          Zimmers        # TR  12:10   MO451
+  ISE254_W        Zimmers        # F   10:45-1:25  MO451
+  ISE308_408      Paredes        # MW  12:10   PA416
+  ISE308_408_L    Paredes        # T   12:10   MO121
+  ISE308_408_W    Paredes        # F   9:20    MO121
+  ISE332_432      Perevalov      # MW  9:20    MO451
+  ISE336_436      Nyberg         # R   4:25-7:05   MO121
+  ISE339_439      Akus           # TR  3:00    MO121
+  ISE347_447      Zuluaga        # TR  3:00    MO451
+  ISE355_455      Terlaky        # TR  3:00    MO375
+  ISE362_462      Liza           # MW  10:45   MO451
+  ISE365_465      Pamukcu        # MW  12:10   MO121
+  ISE371_471      Alexandrescu   # TR  7:55    MO453
+  ISE382_482      Zimmers        # F   1:35-4:15   MO451
+  ISE411          Goldberg       # MW  1:35    MO375
+  ISE417          Curtis         # TR  1:35    MO375
+  ISE418          Ralphs         # TR  3:00    MO453
+  ISE456          Terlaky        # TR  4:25    MO375
+;
+
+# ===================== ALLOWED PATTERNS =====================
+# twice-a-week lectures
+set ALLOWED_PATTERNS[ISE111]     := MW TR ;
+set ALLOWED_PATTERNS[ISE121]     := MW TR ;
+set ALLOWED_PATTERNS[ISE172]     := MW TR ;
+set ALLOWED_PATTERNS[ISE215]     := MW TR ;
+set ALLOWED_PATTERNS[ISE224]     := MW TR ;
+set ALLOWED_PATTERNS[ISE226]     := MW TR ;
+set ALLOWED_PATTERNS[ISE230]     := MW TR ;
+set ALLOWED_PATTERNS[ISE240]     := MW TR ;
+set ALLOWED_PATTERNS[ISE254]     := MW TR ;
+set ALLOWED_PATTERNS[ISE308_408] := MW TR ;
+set ALLOWED_PATTERNS[ISE332_432] := MW TR ;
+set ALLOWED_PATTERNS[ISE339_439] := MW TR ;
+set ALLOWED_PATTERNS[ISE347_447] := MW TR ;
+set ALLOWED_PATTERNS[ISE355_455] := MW TR ;
+set ALLOWED_PATTERNS[ISE362_462] := MW TR ;
+set ALLOWED_PATTERNS[ISE365_465] := MW TR ;
+set ALLOWED_PATTERNS[ISE371_471] := MW TR ;
+set ALLOWED_PATTERNS[ISE411]     := MW ;      # Goldberg request (TTh -> MW)
+set ALLOWED_PATTERNS[ISE417]     := MW TR ;
+set ALLOWED_PATTERNS[ISE418]     := MW TR ;
+set ALLOWED_PATTERNS[ISE456]     := MW TR ;
+
+# once-a-week, one-block meetings (non-labs)
+set ALLOWED_PATTERNS[ISE308_408_L] := M T W R F ;
+set ALLOWED_PATTERNS[ISE308_408_W] := M T W R F ;
+
+# once-a-week, two-block meetings (labs)
+set ALLOWED_PATTERNS[ISE172_L]   := M T W R F ;
+set ALLOWED_PATTERNS[ISE216_L1]  := M T W R F ;
+set ALLOWED_PATTERNS[ISE216_L2]  := M T W R F ;
+set ALLOWED_PATTERNS[ISE254_W]   := M T W R F ;
+set ALLOWED_PATTERNS[ISE336_436] := M T W R F ;
+set ALLOWED_PATTERNS[ISE382_482] := M T W R F ;

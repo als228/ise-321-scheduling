@@ -1,8 +1,16 @@
+# Solve one instance and print the schedule as CSV.
+# Run from the project root:   ampl scripts/run.run
+# To use another instance, change the data line below.
+
 reset;
+option solver highs;
 model models/scheduling.mod;
-data data/small_test.dat;
-option solver gurobi; 
+data data/fall2026_sets.dat;
 solve;
-display x;
-printf {c in COURSES, r in ROOMS, t in TIMESLOTS: x[c,r,t] > 0.5}
-    "%s,%s,%s\n", c, r, t > output/schedule.csv;
+printf "solve_result: %s\n", solve_result;
+
+printf "course,room,pattern,start_block,end_block\n";
+printf {c in NONLABS, r in ROOMS, (p,b) in SLOTS[c]: x[c,r,p,b] > 0.5}
+    "%s,%s,%s,%s,%s\n", c, r, p, b, b;
+printf {c in LABS, r in ROOMS, (p,b) in LAB_SLOTS[c]: y[c,r,p,b] > 0.5}
+    "%s,%s,%s,%s,%s\n", c, r, p, b, b + 1;

@@ -1,35 +1,88 @@
 # Run from the project root:   ampl scripts/tests.run
 # (or in the AMPL console:     include scripts/tests.run;)
+#
+# After each result, "warning:" lists courses with no ALLOWED_PATTERNS entry;
+# the model lets those use every pattern.
 
 reset;
 option solver highs;            # or cbc, gurobi, cplex -- any MIP solver
 option solver_msg 0;            # keep the output short
 model models/scheduling.mod;
 
+# ---------- Test 0: Fall 2026 instance ----------
+reset data;
+data data/fall2026_sets.dat;
+solve;
+printf "\nTEST 0 fall2026         expect: solved      got: %s\n", solve_result;
+if card(UNLISTED) > 0 then {
+  printf "   warning: no ALLOWED_PATTERNS (all patterns used):"; printf {c in UNLISTED} " %s", c; printf "\n"; }
+printf {c in NONLABS, r in ROOMS, (p,b) in SLOTS[c]: x[c,r,p,b] > 0.5}
+    "   %-4s %-4s %-4s %s\n", c, r, p, b;
+printf {c in LABS, r in ROOMS, (p,b) in LAB_SLOTS[c]: y[c,r,p,b] > 0.5}
+    "   %-4s %-4s %-4s %s + %s  (lab)\n", c, r, p, b, b + 1;
+
 # ---------- Test 1: feasible instance ----------
 reset data;
 data data/tests/test_base.dat;
 solve;
 printf "\nTEST 1 base             expect: solved      got: %s\n", solve_result;
-printf {c in NONLABS, r in ROOMS, (p,b) in SLOTS: x[c,r,p,b] > 0.5}
+if card(UNLISTED) > 0 then {
+  printf "   warning: no ALLOWED_PATTERNS (all patterns used):"; printf {c in UNLISTED} " %s", c; printf "\n"; }
+printf {c in NONLABS, r in ROOMS, (p,b) in SLOTS[c]: x[c,r,p,b] > 0.5}
     "   %-4s %-4s %-4s %s\n", c, r, p, b;
-printf {c in LABS, r in ROOMS, (p,b) in LAB_SLOTS: y[c,r,p,b] > 0.5}
-    "   %-4s %-4s %-4s %s + %s  (lab)\n", c, r, p, b, next(b, BLOCKS);
+printf {c in LABS, r in ROOMS, (p,b) in LAB_SLOTS[c]: y[c,r,p,b] > 0.5}
+    "   %-4s %-4s %-4s %s + %s  (lab)\n", c, r, p, b, b + 1;
 
 # ---------- Test 2: room clash ----------
 reset data;
 data data/tests/test_room_clash.dat;
 solve;
 printf "\nTEST 2 room clash       expect: infeasible  got: %s\n", solve_result;
+if card(UNLISTED) > 0 then {
+  printf "   warning: no ALLOWED_PATTERNS (all patterns used):"; printf {c in UNLISTED} " %s", c; printf "\n"; }
 
 # ---------- Test 3: professor clash ----------
 reset data;
 data data/tests/test_prof_clash.dat;
 solve;
 printf "\nTEST 3 prof clash       expect: infeasible  got: %s\n", solve_result;
+if card(UNLISTED) > 0 then {
+  printf "   warning: no ALLOWED_PATTERNS (all patterns used):"; printf {c in UNLISTED} " %s", c; printf "\n"; }
 
 # ---------- Test 4: lab occupies two blocks ----------
 reset data;
 data data/tests/test_lab_two_blocks.dat;
 solve;
 printf "\nTEST 4 lab two blocks   expect: infeasible  got: %s\n", solve_result;
+if card(UNLISTED) > 0 then {
+  printf "   warning: no ALLOWED_PATTERNS (all patterns used):"; printf {c in UNLISTED} " %s", c; printf "\n"; }
+
+# ---------- Test 5: courses limited to their allowed patterns ----------
+reset data;
+data data/tests/test_allowed_patterns.dat;
+solve;
+printf "\nTEST 5 allowed patterns expect: infeasible  got: %s\n", solve_result;
+if card(UNLISTED) > 0 then {
+  printf "   warning: no ALLOWED_PATTERNS (all patterns used):"; printf {c in UNLISTED} " %s", c; printf "\n"; }
+
+# ---------- Test 6: an allowed one-day pattern makes room ----------
+reset data;
+data data/tests/test_one_day_pattern.dat;
+solve;
+printf "\nTEST 6 one-day pattern  expect: solved      got: %s\n", solve_result;
+if card(UNLISTED) > 0 then {
+  printf "   warning: no ALLOWED_PATTERNS (all patterns used):"; printf {c in UNLISTED} " %s", c; printf "\n"; }
+printf {c in NONLABS, r in ROOMS, (p,b) in SLOTS[c]: x[c,r,p,b] > 0.5}
+    "   %-4s %-4s %-4s %s\n", c, r, p, b;
+
+# ---------- Test 7: Spring 2027 instance ----------
+reset data;
+data data/spring2027.dat;
+solve;
+printf "\nTEST 7 spring2027       expect: solved      got: %s\n", solve_result;
+if card(UNLISTED) > 0 then {
+  printf "   warning: no ALLOWED_PATTERNS (all patterns used):"; printf {c in UNLISTED} " %s", c; printf "\n"; }
+printf {c in NONLABS, r in ROOMS, (p,b) in SLOTS[c]: x[c,r,p,b] > 0.5}
+    "   %-4s %-4s %-4s %s\n", c, r, p, b;
+printf {c in LABS, r in ROOMS, (p,b) in LAB_SLOTS[c]: y[c,r,p,b] > 0.5}
+    "   %-4s %-4s %-4s %s + %s  (lab)\n", c, r, p, b, b + 1;
