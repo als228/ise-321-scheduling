@@ -31,7 +31,8 @@ Web UI: `python3 web/server.py`, then open http://127.0.0.1:8321. It uses only t
 - **Two decision variables, split by course type:**
   - `x[c,r,p,b]` is for `NONLABS` and takes one block.
   - `y[c,r,p,s]` is for `LABS` and marks the lab's *start* block `s`. A lab takes blocks `s` and `s+1`, so it can only start in `LAB_BLOCKS = 1..K-1`.
-- The clash constraints (`NoRoomClash`, `NoProfClash`) are indexed by **(day, block)**, not by slot. A pattern is spread over its days, and a lab adds to both block `s` and block `s+1`. Any new resource constraint should follow the same day/block expansion.
+- The clash constraints (`NoRoomClash`, `NoProfClash`) are indexed by **(day, block)**, not by slot. A pattern is spread over its days, and a lab adds to both block `s` and block `s+1`. `X_AT[d,b]` (pairs `(c,p)` for `x`) and `Y_AT[d,b]` (triples `(c,p,s)` for `y`) already do this expansion, so every resource constraint is `sum over X_AT + sum over Y_AT`. New constraints should use them too.
+- **Department rules** are hard constraints driven by data sets, and all of them default to empty: `CLOSED` (day, block), `ROOM_CLOSED` (room, day, block), `GRAD_CLOSED` (day, block, for `GRAD_COURSES`) and `PROF_ONLY` (day, block) with `PROF_ONLY_OK` (day, block, professor). `GRAD_COURSES` is derived from course names: any name containing a 4XX number, so cross-listed `ISE334_434` counts.
 - `instructor[c]` fixes the professor for each course. `SECTIONS_OF[f]` is derived from it.
 - `ALLOWED_PATTERNS[c]` (from the data) limits the patterns a course may use, and `PATTERNS_OF[c]` is the set actually used. A course with no entry falls back to every pattern and is listed in `UNLISTED`. `tests.run` prints it as a `warning:` line and the web UI shows it as a callout. Because `SLOTS[c]` and `LAB_SLOTS[c]` are indexed by course, loops over assignments must use `(p,b) in SLOTS[c]`.
 
@@ -49,6 +50,8 @@ Web UI: `python3 web/server.py`, then open http://127.0.0.1:8321. It uses only t
 - Clock times exist only in the UI (`FIRST_START`, `BLOCK_LEN`, `BLOCK_STEP` in `app.js`). Block `b` is a 75-minute slot starting at 7:55 AM + 85·(b−1) minutes, so block 1 is 7:55–9:10 AM and block 10 is 8:40–9:55 PM. The model and data use only block numbers.
 
 ## Conventions
+
+- **AMPL segfaults (exit 139) on `reset data` + `solve`** if the model has a set indexed over another *data* set (e.g. `set S {PROF_ONLY}`) and a constraint tests membership in it. `tests.run` resets data between cases, so this kills the whole suite after Test 0 with no error message. Use a flat tuple set instead (as `PROF_ONLY_OK` does).
 
 - `BLOCKS` is a numeric range, not an ordered set, so output code should use `b + 1` rather than `next(b, BLOCKS)`.
 

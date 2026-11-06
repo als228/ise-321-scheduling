@@ -86,3 +86,43 @@ printf {c in NONLABS, r in ROOMS, (p,b) in SLOTS[c]: x[c,r,p,b] > 0.5}
     "   %-4s %-4s %-4s %s\n", c, r, p, b;
 printf {c in LABS, r in ROOMS, (p,b) in LAB_SLOTS[c]: y[c,r,p,b] > 0.5}
     "   %-4s %-4s %-4s %s + %s  (lab)\n", c, r, p, b, b + 1;
+
+# ---------- Test 8: closed slot ----------
+reset data;
+data data/tests/test_dept_closed.dat;
+solve;
+printf "\nTEST 8 closed slot      expect: infeasible  got: %s\n", solve_result;
+if card(UNLISTED) > 0 then {
+  printf "   warning: no ALLOWED_PATTERNS (all patterns used):"; printf {c in UNLISTED} " %s", c; printf "\n"; }
+
+# ---------- Test 9: room closed ----------
+reset data;
+data data/tests/test_dept_room_closed.dat;
+solve;
+printf "\nTEST 9 room closed      expect: infeasible  got: %s\n", solve_result;
+if card(UNLISTED) > 0 then {
+  printf "   warning: no ALLOWED_PATTERNS (all patterns used):"; printf {c in UNLISTED} " %s", c; printf "\n"; }
+
+# ---------- Test 10: no 4XX ----------
+reset data;
+data data/tests/test_dept_grad_closed.dat;
+solve;
+printf "\nTEST 10 no 4XX          expect: infeasible  got: %s\n", solve_result;
+if card(UNLISTED) > 0 then {
+  printf "   warning: no ALLOWED_PATTERNS (all patterns used):"; printf {c in UNLISTED} " %s", c; printf "\n"; }
+
+# ---------- Test 11: prof-only ----------
+reset data;
+data data/tests/test_dept_prof_only.dat;
+solve;
+printf "\nTEST 11 prof-only       expect: infeasible  got: %s\n", solve_result;
+if card(UNLISTED) > 0 then {
+  printf "   warning: no ALLOWED_PATTERNS (all patterns used):"; printf {c in UNLISTED} " %s", c; printf "\n"; }
+
+# ---------- Test 12: prof allowed ----------
+reset data;
+data data/tests/test_dept_prof_allowed.dat;
+solve;
+printf "\nTEST 12 prof allowed    expect: solved      got: %s\n", solve_result;
+if card(UNLISTED) > 0 then {
+  printf "   warning: no ALLOWED_PATTERNS (all patterns used):"; printf {c in UNLISTED} " %s", c; printf "\n"; }

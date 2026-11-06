@@ -1,0 +1,18 @@
+# Closed room slot -- should be INFEASIBLE
+# Three TR courses need 3 of the 4 (room, block) TR slots. Closing R1 on
+# Tuesday (DeptRoomClosed) leaves only R2, i.e. 2 slots. R2 stays open, so
+# this checks the rule is per room.
+set COURSES    := A  B  C ;
+set LABS       := ;
+set PROFESSORS := P1  P2  P3 ;
+set ROOMS      := R1  R2 ;
+set DAYS       := Mon  Tue  Wed  Thu  Fri ;
+param K        := 2 ;
+set PATTERNS   := MW  TR ;
+set DAYS_OF[MW] := Mon Wed ;
+set DAYS_OF[TR] := Tue Thu ;
+param instructor := A P1   B P2   C P3 ;
+set ALLOWED_PATTERNS[A] := TR ;
+set ALLOWED_PATTERNS[B] := TR ;
+set ALLOWED_PATTERNS[C] := TR ;
+set ROOM_CLOSED := R1 Tue 1   R1 Tue 2 ;

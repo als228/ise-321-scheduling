@@ -89,3 +89,12 @@ set ALLOWED_PATTERNS[ISE426]     := MW TR ;
 set ALLOWED_PATTERNS[ISE429]     := MW TR ;
 set ALLOWED_PATTERNS[ISE444]     := MW TR ;
 set ALLOWED_PATTERNS[ENGR005]    := M T W R F ;
+
+# ===================== DEPARTMENT RULES =====================
+# block 3 = 10:45, block 4 = 12:10
+set CLOSED := Thu 3   Tue 4 ;               # no classes at all
+set ROOM_CLOSED := MO453 Tue 3   MO375 Thu 4 ;
+set GRAD_CLOSED := Thu 4 ;                  # no 4XX courses (incl. cross-listed)
+set PROF_ONLY   := Thu 4 ;                  # only the professors listed below
+# Derya Pamukcu, Emory Zimmers, Eugene Perevalov, Louis Zuluaga
+set PROF_ONLY_OK := Thu 4 Pamukcu   Thu 4 Zimmers   Thu 4 Perevalov   Thu 4 Zuluaga ;

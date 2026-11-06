@@ -1,0 +1,16 @@
+# No 4XX courses in a slot -- should be INFEASIBLE
+# ISE301_401 (cross-listed, so it counts as 4XX) and ISE402 are both TR in one
+# room. Banning 4XX on Thu block 1 (DeptGradClosed) leaves both only TR2.
+set COURSES    := ISE301_401  ISE402 ;
+set LABS       := ;
+set PROFESSORS := P1  P2 ;
+set ROOMS      := R1 ;
+set DAYS       := Mon  Tue  Wed  Thu  Fri ;
+param K        := 2 ;
+set PATTERNS   := MW  TR ;
+set DAYS_OF[MW] := Mon Wed ;
+set DAYS_OF[TR] := Tue Thu ;
+param instructor := ISE301_401 P1   ISE402 P2 ;
+set ALLOWED_PATTERNS[ISE301_401] := TR ;
+set ALLOWED_PATTERNS[ISE402]     := TR ;
+set GRAD_CLOSED := Thu 1 ;

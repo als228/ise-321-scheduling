@@ -1,0 +1,17 @@
+# Professor-only slot -- should be INFEASIBLE
+# Two TR courses in one room, so one must take TR1. Thu block 1 is reserved
+# for P3 (DeptProfOnly), who teaches neither.
+set COURSES    := A  B ;
+set LABS       := ;
+set PROFESSORS := P1  P2 ;
+set ROOMS      := R1 ;
+set DAYS       := Mon  Tue  Wed  Thu  Fri ;
+param K        := 2 ;
+set PATTERNS   := MW  TR ;
+set DAYS_OF[MW] := Mon Wed ;
+set DAYS_OF[TR] := Tue Thu ;
+param instructor := A P1   B P2 ;
+set ALLOWED_PATTERNS[A] := TR ;
+set ALLOWED_PATTERNS[B] := TR ;
+set PROF_ONLY    := Thu 1 ;
+set PROF_ONLY_OK := Thu 1 P3 ;

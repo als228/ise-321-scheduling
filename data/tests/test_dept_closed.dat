@@ -1,0 +1,16 @@
+# Closed slot -- should be INFEASIBLE
+# Two TR courses fill TR1 and TR2 in the one room. Closing Thu block 1
+# (DeptClosed) leaves only TR2.
+set COURSES    := A  B ;
+set LABS       := ;
+set PROFESSORS := P1  P2 ;
+set ROOMS      := R1 ;
+set DAYS       := Mon  Tue  Wed  Thu  Fri ;
+param K        := 2 ;
+set PATTERNS   := MW  TR ;
+set DAYS_OF[MW] := Mon Wed ;
+set DAYS_OF[TR] := Tue Thu ;
+param instructor := A P1   B P2 ;
+set ALLOWED_PATTERNS[A] := TR ;
+set ALLOWED_PATTERNS[B] := TR ;
+set CLOSED := Thu 1 ;
