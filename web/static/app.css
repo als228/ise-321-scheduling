@@ -378,6 +378,8 @@ pre.code {
 }
 .callout.warn .mark { background: var(--warn); }
 .callout.err .mark { background: var(--err); }
+.callout.info { background: var(--accent-weak); border-color: color-mix(in srgb, var(--accent) 30%, transparent); }
+.callout.info .mark { background: var(--accent); }
 
 details.disclose { border-top: 1px solid var(--border); }
 details.disclose summary {

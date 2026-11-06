@@ -2,7 +2,8 @@
 # (or in the AMPL console:     include scripts/tests.run;)
 #
 # After each result, "warning:" lists courses with no ALLOWED_PATTERNS entry;
-# the model lets those use every pattern.
+# the model lets those use every pattern. "not offered:" lists cohort course
+# numbers with no course this term (fine for semester-specific courses).
 
 reset;
 option solver highs;            # or cbc, gurobi, cplex -- any MIP solver
@@ -16,6 +17,9 @@ solve;
 printf "\nTEST 0 fall2026         expect: solved      got: %s\n", solve_result;
 if card(UNLISTED) > 0 then {
   printf "   warning: no ALLOWED_PATTERNS (all patterns used):"; printf {c in UNLISTED} " %s", c; printf "\n"; }
+if card(COHORT_MISSING) > 0 then {
+  printf "   not offered:"; printf {(h,n) in COHORT_MISSING} " %s/%s", h, n; printf "\n"; }
+printf "   score: %g   cohort overlaps: %g\n", Score, sum {h in COHORTS, d in DAYS, b in BLOCKS} Overlap[h,d,b];
 printf {c in NONLABS, r in ROOMS, (p,b) in SLOTS[c]: x[c,r,p,b] > 0.5}
     "   %-4s %-4s %-4s %s\n", c, r, p, b;
 printf {c in LABS, r in ROOMS, (p,b) in LAB_SLOTS[c]: y[c,r,p,b] > 0.5}
@@ -28,6 +32,8 @@ solve;
 printf "\nTEST 1 base             expect: solved      got: %s\n", solve_result;
 if card(UNLISTED) > 0 then {
   printf "   warning: no ALLOWED_PATTERNS (all patterns used):"; printf {c in UNLISTED} " %s", c; printf "\n"; }
+if card(COHORT_MISSING) > 0 then {
+  printf "   not offered:"; printf {(h,n) in COHORT_MISSING} " %s/%s", h, n; printf "\n"; }
 printf {c in NONLABS, r in ROOMS, (p,b) in SLOTS[c]: x[c,r,p,b] > 0.5}
     "   %-4s %-4s %-4s %s\n", c, r, p, b;
 printf {c in LABS, r in ROOMS, (p,b) in LAB_SLOTS[c]: y[c,r,p,b] > 0.5}
@@ -40,6 +46,8 @@ solve;
 printf "\nTEST 2 room clash       expect: infeasible  got: %s\n", solve_result;
 if card(UNLISTED) > 0 then {
   printf "   warning: no ALLOWED_PATTERNS (all patterns used):"; printf {c in UNLISTED} " %s", c; printf "\n"; }
+if card(COHORT_MISSING) > 0 then {
+  printf "   not offered:"; printf {(h,n) in COHORT_MISSING} " %s/%s", h, n; printf "\n"; }
 
 # ---------- Test 3: professor clash ----------
 reset data;
@@ -48,6 +56,8 @@ solve;
 printf "\nTEST 3 prof clash       expect: infeasible  got: %s\n", solve_result;
 if card(UNLISTED) > 0 then {
   printf "   warning: no ALLOWED_PATTERNS (all patterns used):"; printf {c in UNLISTED} " %s", c; printf "\n"; }
+if card(COHORT_MISSING) > 0 then {
+  printf "   not offered:"; printf {(h,n) in COHORT_MISSING} " %s/%s", h, n; printf "\n"; }
 
 # ---------- Test 4: lab occupies two blocks ----------
 reset data;
@@ -56,6 +66,8 @@ solve;
 printf "\nTEST 4 lab two blocks   expect: infeasible  got: %s\n", solve_result;
 if card(UNLISTED) > 0 then {
   printf "   warning: no ALLOWED_PATTERNS (all patterns used):"; printf {c in UNLISTED} " %s", c; printf "\n"; }
+if card(COHORT_MISSING) > 0 then {
+  printf "   not offered:"; printf {(h,n) in COHORT_MISSING} " %s/%s", h, n; printf "\n"; }
 
 # ---------- Test 5: courses limited to their allowed patterns ----------
 reset data;
@@ -64,6 +76,8 @@ solve;
 printf "\nTEST 5 allowed patterns expect: infeasible  got: %s\n", solve_result;
 if card(UNLISTED) > 0 then {
   printf "   warning: no ALLOWED_PATTERNS (all patterns used):"; printf {c in UNLISTED} " %s", c; printf "\n"; }
+if card(COHORT_MISSING) > 0 then {
+  printf "   not offered:"; printf {(h,n) in COHORT_MISSING} " %s/%s", h, n; printf "\n"; }
 
 # ---------- Test 6: an allowed one-day pattern makes room ----------
 reset data;
@@ -72,6 +86,8 @@ solve;
 printf "\nTEST 6 one-day pattern  expect: solved      got: %s\n", solve_result;
 if card(UNLISTED) > 0 then {
   printf "   warning: no ALLOWED_PATTERNS (all patterns used):"; printf {c in UNLISTED} " %s", c; printf "\n"; }
+if card(COHORT_MISSING) > 0 then {
+  printf "   not offered:"; printf {(h,n) in COHORT_MISSING} " %s/%s", h, n; printf "\n"; }
 printf {c in NONLABS, r in ROOMS, (p,b) in SLOTS[c]: x[c,r,p,b] > 0.5}
     "   %-4s %-4s %-4s %s\n", c, r, p, b;
 
@@ -82,6 +98,9 @@ solve;
 printf "\nTEST 7 spring2027       expect: solved      got: %s\n", solve_result;
 if card(UNLISTED) > 0 then {
   printf "   warning: no ALLOWED_PATTERNS (all patterns used):"; printf {c in UNLISTED} " %s", c; printf "\n"; }
+if card(COHORT_MISSING) > 0 then {
+  printf "   not offered:"; printf {(h,n) in COHORT_MISSING} " %s/%s", h, n; printf "\n"; }
+printf "   score: %g   cohort overlaps: %g\n", Score, sum {h in COHORTS, d in DAYS, b in BLOCKS} Overlap[h,d,b];
 printf {c in NONLABS, r in ROOMS, (p,b) in SLOTS[c]: x[c,r,p,b] > 0.5}
     "   %-4s %-4s %-4s %s\n", c, r, p, b;
 printf {c in LABS, r in ROOMS, (p,b) in LAB_SLOTS[c]: y[c,r,p,b] > 0.5}
@@ -94,6 +113,8 @@ solve;
 printf "\nTEST 8 closed slot      expect: infeasible  got: %s\n", solve_result;
 if card(UNLISTED) > 0 then {
   printf "   warning: no ALLOWED_PATTERNS (all patterns used):"; printf {c in UNLISTED} " %s", c; printf "\n"; }
+if card(COHORT_MISSING) > 0 then {
+  printf "   not offered:"; printf {(h,n) in COHORT_MISSING} " %s/%s", h, n; printf "\n"; }
 
 # ---------- Test 9: room closed ----------
 reset data;
@@ -102,6 +123,8 @@ solve;
 printf "\nTEST 9 room closed      expect: infeasible  got: %s\n", solve_result;
 if card(UNLISTED) > 0 then {
   printf "   warning: no ALLOWED_PATTERNS (all patterns used):"; printf {c in UNLISTED} " %s", c; printf "\n"; }
+if card(COHORT_MISSING) > 0 then {
+  printf "   not offered:"; printf {(h,n) in COHORT_MISSING} " %s/%s", h, n; printf "\n"; }
 
 # ---------- Test 10: no 4XX ----------
 reset data;
@@ -110,6 +133,8 @@ solve;
 printf "\nTEST 10 no 4XX          expect: infeasible  got: %s\n", solve_result;
 if card(UNLISTED) > 0 then {
   printf "   warning: no ALLOWED_PATTERNS (all patterns used):"; printf {c in UNLISTED} " %s", c; printf "\n"; }
+if card(COHORT_MISSING) > 0 then {
+  printf "   not offered:"; printf {(h,n) in COHORT_MISSING} " %s/%s", h, n; printf "\n"; }
 
 # ---------- Test 11: prof-only ----------
 reset data;
@@ -118,6 +143,8 @@ solve;
 printf "\nTEST 11 prof-only       expect: infeasible  got: %s\n", solve_result;
 if card(UNLISTED) > 0 then {
   printf "   warning: no ALLOWED_PATTERNS (all patterns used):"; printf {c in UNLISTED} " %s", c; printf "\n"; }
+if card(COHORT_MISSING) > 0 then {
+  printf "   not offered:"; printf {(h,n) in COHORT_MISSING} " %s/%s", h, n; printf "\n"; }
 
 # ---------- Test 12: prof allowed ----------
 reset data;
@@ -126,3 +153,16 @@ solve;
 printf "\nTEST 12 prof allowed    expect: solved      got: %s\n", solve_result;
 if card(UNLISTED) > 0 then {
   printf "   warning: no ALLOWED_PATTERNS (all patterns used):"; printf {c in UNLISTED} " %s", c; printf "\n"; }
+if card(COHORT_MISSING) > 0 then {
+  printf "   not offered:"; printf {(h,n) in COHORT_MISSING} " %s/%s", h, n; printf "\n"; }
+
+# ---------- Test 13: cohort overlap (soft) ----------
+reset data;
+data data/tests/test_cohort_overlap.dat;
+solve;
+printf "\nTEST 13 cohort overlap  expect: solved      got: %s\n", solve_result;
+if card(UNLISTED) > 0 then {
+  printf "   warning: no ALLOWED_PATTERNS (all patterns used):"; printf {c in UNLISTED} " %s", c; printf "\n"; }
+if card(COHORT_MISSING) > 0 then {
+  printf "   not offered:"; printf {(h,n) in COHORT_MISSING} " %s/%s", h, n; printf "\n"; }
+printf "   score: %g (expect -2)   cohort overlaps: %g (expect 2)\n", Score, sum {h in COHORTS, d in DAYS, b in BLOCKS} Overlap[h,d,b];

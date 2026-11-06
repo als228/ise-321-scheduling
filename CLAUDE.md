@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-An AMPL integer program that builds a course timetable for the ISE department (Fall 2026). It places each course in a room, a meeting pattern and a time block, with no room or professor clashes. The objective is still a placeholder (`minimize NoObjective: 0`), so the model is currently only a feasibility check.
+An AMPL integer program that builds a course timetable for the ISE department (Fall 2026). It places each course in a room, a meeting pattern and a time block, with no room or professor clashes. It maximizes a `Score`: 1 point for each class meeting in a good block, minus `W` points for each same-cohort overlap.
 
 ## Commands
 
@@ -33,6 +33,8 @@ Web UI: `python3 web/server.py`, then open http://127.0.0.1:8321. It uses only t
   - `y[c,r,p,s]` is for `LABS` and marks the lab's *start* block `s`. A lab takes blocks `s` and `s+1`, so it can only start in `LAB_BLOCKS = 1..K-1`.
 - The clash constraints (`NoRoomClash`, `NoProfClash`) are indexed by **(day, block)**, not by slot. A pattern is spread over its days, and a lab adds to both block `s` and block `s+1`. `X_AT[d,b]` (pairs `(c,p)` for `x`) and `Y_AT[d,b]` (triples `(c,p,s)` for `y`) already do this expansion, so every resource constraint is `sum over X_AT + sum over Y_AT`. New constraints should use them too.
 - **Department rules** are hard constraints driven by data sets, and all of them default to empty: `CLOSED` (day, block), `ROOM_CLOSED` (room, day, block), `GRAD_CLOSED` (day, block, for `GRAD_COURSES`) and `PROF_ONLY` (day, block) with `PROF_ONLY_OK` (day, block, professor). `GRAD_COURSES` is derived from course names: any name containing a 4XX number, so cross-listed `ISE334_434` counts.
+- **Objective (`maximize Score`):** `good[b]` (default 1 for blocks 2–6, else 0) is earned for every (day, block) a class occupies, so labs earn per block. `Overlap[h,d,b] >= (cohort h classes in session) − 1` is subtracted with weight `W` (default 3). Both defaults can be overridden in data.
+- **Cohorts** come from `COHORT_NUMS`, which is a list of (cohort, course number) pairs. A number matches every course whose name contains it as a whole number, so `172` gives `ISE172` and `ISE172_L`. That lets the same list go in every semester. `IN_COHORT` holds the matched (cohort, course) pairs, and `COHORT_MISSING` lists numbers not offered this term. That is expected for semester-specific courses; `tests.run` prints them as `not offered:` and the web UI shows them in a Cohorts callout.
 - `instructor[c]` fixes the professor for each course. `SECTIONS_OF[f]` is derived from it.
 - `ALLOWED_PATTERNS[c]` (from the data) limits the patterns a course may use, and `PATTERNS_OF[c]` is the set actually used. A course with no entry falls back to every pattern and is listed in `UNLISTED`. `tests.run` prints it as a `warning:` line and the web UI shows it as a callout. Because `SLOTS[c]` and `LAB_SLOTS[c]` are indexed by course, loops over assignments must use `(p,b) in SLOTS[c]`.
 
@@ -55,18 +57,13 @@ Web UI: `python3 web/server.py`, then open http://127.0.0.1:8321. It uses only t
 
 - `BLOCKS` is a numeric range, not an ordered set, so output code should use `b + 1` rather than `next(b, BLOCKS)`.
 
-## To do: replace the placeholder objective
+## To do: more soft goals
 
-None of this is implemented yet. Count every penalty **per meeting** (once per day in `DAYS_OF[p]`), and charge labs for both blocks `s` and `s+1`. The plan is to make non-negotiable rules hard constraints and combine soft goals as `minimize Total: w_time*TimeCost + w_pref*PrefCost + w_room*RoomCost + w_cohort*sum Overlap`.
+Done: early/late blocks (flat `good[b]`), cohort overlaps, and the department rules (hard). Count every new term **per meeting** (once per day in `DAYS_OF[p]`), using `X_AT`/`Y_AT` so labs count for both blocks, and add it to `Score` as a reward or a weighted penalty.
 
-1. **Avoid early and late blocks.** Add `param block_cost {BLOCKS} default 0` and an optional `day_cost {DAYS}`, then build `TimeCost` from them. This adds no new variables.
-   - *Data needed:* which blocks are bad and how much they should cost (e.g. block 1 = 2, blocks 9 and 10 = 3), whether any block is banned outright, and whether Friday should be avoided.
-2. **Professor preferences.** Soft: `param pref_cost {PROFESSORS, DAYS, BLOCKS} default 0`. Hard: `set UNAVAILABLE within {PROFESSORS, DAYS, BLOCKS}`, enforced by a `ProfUnavailable` constraint with the same left-hand side as `NoProfClash` and a right-hand side of 0.
-   - *Data needed:* for each professor, the times they can't teach and the times they'd rather avoid, plus whether some professors' preferences count more.
-3. **Room fit.** Add `param capacity {ROOMS}` and `param enrollment {COURSES}`. Make capacity hard through `ROOMS_FOR[c] = {r: capacity[r] >= enrollment[c]}`, which restricts the `x`/`y` index sets. Add a soft `RoomCost` that charges for empty seats (`capacity - enrollment`). An optional `SUITABLE_ROOMS[c]` can limit which rooms the labs use.
-   - *Data needed:* capacities of MO121, MO355, MO375, MO451 and MO453; enrollment per course (combined for cross-listed ones); any room requirements for labs; and whether any sections are online, so they need no room.
-4. **Cohort conflicts.** Add `set COHORTS` and `set COURSES_OF {COHORTS}`, then a hard `NoCohortClash` constraint shaped like `NoProfClash`. If that is infeasible, make it soft with `Overlap {COHORTS, DAYS, BLOCKS} >= 0` on the right-hand side and penalize the overlaps.
-   - *Data needed:* which courses are taken together in the same semester, whether 400-level and cross-listed courses share students with undergraduate cohorts, and the fixed times of any outside courses (math, physics) that should be blocked.
-5. **Weights.** *Data needed:* a ranking of the soft goals, e.g. professor preferences > early/late blocks > room fit.
-
-Items 1 and 5 alone are enough to replace `NoObjective`. The others can be added as their data comes in.
+1. **Professor preferences.** Soft: a `pref` param over (professor, day, block), for example as flat triples. Hard: `UNAVAILABLE` (professor, day, block) triples, enforced like `DeptProfOnly`.
+   - *Data needed:* for each professor, the times they can't teach and the times they'd rather avoid.
+2. **Room fit.** `param capacity {ROOMS}` and `param enrollment {COURSES}`. Make capacity hard by filtering the rooms in the `x`/`y` index sets. Charge a soft penalty for empty seats.
+   - *Data needed:* room capacities, enrollment per course (combined for cross-listed ones), lab room requirements, and any online sections.
+3. **Graded block scores** (for example block 7 less bad than block 10): override `good[b]` in data.
+4. **Weights:** `W` is 3 for now and should be tuned once more terms exist.

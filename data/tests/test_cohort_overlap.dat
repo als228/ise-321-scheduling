@@ -1,0 +1,19 @@
+# Cohort overlap -- should solve, Score = -2
+# Three TR courses in one cohort, two rooms, two blocks: two of them must share
+# a block, so one overlap on Tue and one on Thu (2 total). Block 1 is not a good
+# block, so the best is two courses at block 2 (4 points) - 3*2 = -2.
+# Also checks COHORT_MISSING: number 999 is not offered.
+set COURSES    := ISE101  ISE102  ISE103 ;
+set LABS       := ;
+set PROFESSORS := P1  P2  P3 ;
+set ROOMS      := R1  R2 ;
+set DAYS       := Mon  Tue  Wed  Thu  Fri ;
+param K        := 2 ;
+set PATTERNS   := MW  TR ;
+set DAYS_OF[MW] := Mon Wed ;
+set DAYS_OF[TR] := Tue Thu ;
+param instructor := ISE101 P1   ISE102 P2   ISE103 P3 ;
+set ALLOWED_PATTERNS[ISE101] := TR ;
+set ALLOWED_PATTERNS[ISE102] := TR ;
+set ALLOWED_PATTERNS[ISE103] := TR ;
+set COHORT_NUMS := freshman 101   freshman 102   freshman 103   freshman 999 ;

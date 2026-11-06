@@ -45,6 +45,8 @@ printf {{p in PATTERNS}} "PATTERN\t%s\n", p >> "{out}";
 printf {{p in PATTERNS, d in DAYS_OF[p]}} "PATDAY\t%s\t%s\n", p, d >> "{out}";
 printf {{c in COURSES}} "COURSE\t%s\t%s\t%d\n", c, instructor[c], if c in LABS then 1 else 0 >> "{out}";
 printf {{c in UNLISTED}} "UNLISTED\t%s\n", c >> "{out}";
+printf {{(h,c) in IN_COHORT}} "COHORT\t%s\t%s\n", h, c >> "{out}";
+printf {{(h,n) in COHORT_MISSING}} "COHORTMISSING\t%s\t%s\n", h, n >> "{out}";
 {solve_block}
 close "{out}";
 '''
@@ -55,6 +57,7 @@ printf "STATUS\t%s\n", solve_result >> "{out}";
 printf "TIME\t%.3f\n", _solve_elapsed_time >> "{out}";
 printf "SIZE\t%d\t%d\n", _nvars, _ncons >> "{out}";
 if solve_result = "solved" then {{
+  printf "SCORE\t%g\t%g\n", Score, sum {{h in COHORTS, d in DAYS, b in BLOCKS}} Overlap[h,d,b] >> "{out}";
   printf {{c in NONLABS, r in ROOMS, (p,b) in SLOTS[c]: x[c,r,p,b] > 0.5}}
     "ASSIGN\t%s\t%s\t%s\t%d\t1\n", c, r, p, b >> "{out}";
   printf {{c in LABS, r in ROOMS, (p,b) in LAB_SLOTS[c]: y[c,r,p,b] > 0.5}}
@@ -87,7 +90,7 @@ def run_ampl(dat_text, solve=True):
 def parse_report(text, log, solve):
     res = {"status": "error", "log": log.strip(), "instance": None, "assignments": []}
     inst = {"K": 0, "days": [], "rooms": [], "professors": [], "patterns": {}, "courses": [],
-            "unlisted": []}
+            "unlisted": [], "cohorts": {}, "cohort_missing": []}
     loaded = False
     for line in text.splitlines():
         f = line.split("\t")
@@ -110,6 +113,12 @@ def parse_report(text, log, solve):
             inst["courses"].append({"code": f[1], "instructor": f[2], "lab": f[3] == "1"})
         elif tag == "UNLISTED":
             inst["unlisted"].append(f[1])
+        elif tag == "COHORT":
+            inst["cohorts"].setdefault(f[1], []).append(f[2])
+        elif tag == "COHORTMISSING":
+            inst["cohort_missing"].append({"cohort": f[1], "number": f[2]})
+        elif tag == "SCORE":
+            res["score"], res["overlaps"] = float(f[1]), float(f[2])
         elif tag == "STATUS":
             res["status"] = f[1]
         elif tag == "TIME":

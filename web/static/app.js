@@ -651,6 +651,8 @@ function renderSchedule() {
         ${stat("Professors", inst.professors.length)}
         ${stat("Blocks / day", inst.K)}
         ${solved ? stat("Room use", `${Math.round((100 * used) / cap)}%`) : ""}
+        ${solved && res.score != null ? stat("Score", res.score) : ""}
+        ${solved && res.overlaps != null && Object.keys(inst.cohorts || {}).length ? stat("Cohort overlaps", res.overlaps) : ""}
         ${res.solve_time != null ? stat("Solve time", `${res.solve_time.toFixed(2)} s`) : ""}
       </div>` : ""}
       <details class="disclose"><summary>Input data</summary><div><pre class="code">${esc(res.dat)}</pre></div></details>
@@ -662,6 +664,18 @@ function renderSchedule() {
       <h3>${inst.unlisted.length} course${inst.unlisted.length === 1 ? " has" : "s have"} no allowed patterns</h3>
       <p>${inst.unlisted.map(esc).join(", ")} ${inst.unlisted.length === 1 ? "has" : "have"} no <code>ALLOWED_PATTERNS</code>
       entry in the data, so the model lets ${inst.unlisted.length === 1 ? "it" : "them"} use every pattern.</p></div></div>` : "";
+
+  // cohort membership, plus course numbers not offered this term (expected for
+  // semester-specific courses, so this is informational, not a warning)
+  const cohortNames = inst ? Object.keys(inst.cohorts || {}) : [];
+  const missing = inst ? inst.cohort_missing || [] : [];
+  const cohorts = cohortNames.length || missing.length ? `<div class="callout info"><div class="mark">i</div><div>
+      <h3>Cohorts</h3>
+      ${[...new Set([...cohortNames, ...missing.map((m) => m.cohort)])].map((h) => {
+        const have = (inst.cohorts[h] || []).map(esc).join(", ") || "none";
+        const miss = missing.filter((m) => m.cohort === h).map((m) => esc(m.number));
+        return `<p><b>${esc(h)}:</b> ${have}${miss.length ? ` · <span class="muted">not offered this term: ${miss.join(", ")}</span>` : ""}</p>`;
+      }).join("")}</div></div>` : "";
 
   let body = "";
   if (res.status === "infeasible") {
@@ -708,7 +722,7 @@ function renderSchedule() {
       </div></div>`;
   }
 
-  el.innerHTML = `<div class="stack">${header}${unlisted}${body}</div>`;
+  el.innerHTML = `<div class="stack">${header}${unlisted}${cohorts}${body}</div>`;
   bindSchedule(el, d);
 }
 

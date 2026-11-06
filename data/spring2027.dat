@@ -121,3 +121,12 @@ set GRAD_CLOSED := Thu 4 ;                  # no 4XX courses (incl. cross-listed
 set PROF_ONLY   := Thu 4 ;                  # only the professors listed below
 # Derya Pamukcu, Emory Zimmers, Eugene Perevalov, Louis Zuluaga
 set PROF_ONLY_OK := Thu 4 Pamukcu   Thu 4 Zimmers   Thu 4 Perevalov   Thu 4 Zuluaga ;
+
+# ===================== COHORTS =====================
+# (cohort, course number). Same list in every semester; numbers not offered
+# this term are reported as missing, which is expected.
+set COHORT_NUMS :=
+  sophomore 111   sophomore 131   sophomore 112   sophomore 132   sophomore 121
+  junior 230   junior 240   junior 224   junior 226
+  junior 308   junior 172   junior 215   junior 216
+  senior 251   senior 254 ;

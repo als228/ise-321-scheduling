@@ -59,14 +59,45 @@ set PROF_ONLY within {DAYS, BLOCKS} default {};
 # The names need not be teaching this term.
 set PROF_ONLY_OK dimen 3 default {};
 
+# ===================== COHORTS =====================
+# (cohort, course number) pairs, e.g. (junior, 172). A number covers every
+# course whose name contains it: 172 -> ISE172 and ISE172_L, 308 -> ISE308_408,
+# ISE308_408_L, ISE308_408_W. The same list can go in every semester's data;
+# numbers not offered this term are listed in COHORT_MISSING.
+set COHORT_NUMS dimen 2 default {};
+set COHORTS = setof {(h,n) in COHORT_NUMS} h;
+set IN_COHORT = {h in COHORTS, c in COURSES:
+    exists {(h2,n) in COHORT_NUMS: h2 = h}
+        match(c, "(^|[^0-9])" & n & "([^0-9]|$)") > 0};
+set COHORT_MISSING = {(h,n) in COHORT_NUMS:
+    not exists {c in COURSES} match(c, "(^|[^0-9])" & n & "([^0-9]|$)") > 0};
+
+# ===================== SCORING =====================
+# 1 point per class meeting in a good block, per block it occupies
+# (so a lab earns up to 2 per meeting). Default: blocks 2-6 are good,
+# block 1 and anything after block 6 are not.
+param good {b in BLOCKS} default (if b >= 2 and b <= 6 then 1 else 0);
+
+# points lost per cohort overlap (per day and block)
+param W >= 0 default 3;
+
 # ===================== VARIABLES =====================
 var x {c in NONLABS, ROOMS, SLOTS[c]}  binary;    # 1 if course meets in room r, pattern p, block b
 var y {c in LABS, ROOMS, LAB_SLOTS[c]} binary;    # 1 if lab STARTS in room r, pattern p, block b
 
 
+# extra same-cohort classes in session on day d, block b
+# (2 classes at once -> 1, 3 classes -> 2)
+var Overlap {COHORTS, DAYS, BLOCKS} >= 0;
+
 # ===================== OBJECTIVE =====================
-# placeholder until the objective is designed
-minimize NoObjective: 0;
+# Score = 1 point for every class meeting in a good block
+#       - W points for every cohort overlap
+maximize Score:
+    sum {d in DAYS, b in BLOCKS} good[b] * (
+        sum {(c,p) in X_AT[d,b], r in ROOMS} x[c,r,p,b]
+      + sum {(c,p,s) in Y_AT[d,b], r in ROOMS} y[c,r,p,s] )
+  - W * sum {h in COHORTS, d in DAYS, b in BLOCKS} Overlap[h,d,b];
 
 # ===================== CONSTRAINTS =====================
 
@@ -100,3 +131,11 @@ subject to DeptGradClosed {(d,b) in GRAD_CLOSED}:
 subject to DeptProfOnly {(d,b) in PROF_ONLY}:
     sum {(c,p) in X_AT[d,b], r in ROOMS: (d,b,instructor[c]) not in PROF_ONLY_OK} x[c,r,p,b]
   + sum {(c,p,s) in Y_AT[d,b], r in ROOMS: (d,b,instructor[c]) not in PROF_ONLY_OK} y[c,r,p,s] = 0;
+
+# ---------- cohorts (soft) ----------
+# Overlap must cover (number of cohort classes in session) - 1. Maximizing
+# Score pushes it down to exactly that, or 0 when nothing clashes.
+subject to CohortOverlap {h in COHORTS, d in DAYS, b in BLOCKS}:
+    sum {(c,p) in X_AT[d,b], r in ROOMS: (h,c) in IN_COHORT} x[c,r,p,b]
+  + sum {(c,p,s) in Y_AT[d,b], r in ROOMS: (h,c) in IN_COHORT} y[c,r,p,s]
+  - 1 <= Overlap[h,d,b];
