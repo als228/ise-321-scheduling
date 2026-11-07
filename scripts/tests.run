@@ -19,7 +19,7 @@ if card(UNLISTED) > 0 then {
   printf "   warning: no ALLOWED_PATTERNS (all patterns used):"; printf {c in UNLISTED} " %s", c; printf "\n"; }
 if card(COHORT_MISSING) > 0 then {
   printf "   not offered:"; printf {(h,n) in COHORT_MISSING} " %s/%s", h, n; printf "\n"; }
-printf "   score: %g   cohort overlaps: %g\n", Score, sum {h in COHORTS, d in DAYS, b in BLOCKS} Overlap[h,d,b];
+printf "   score: %g   cohort overlaps: %g\n", Score, sum {(h,c1,c2) in COHORT_PAIRS} Overlap[h,c1,c2];
 printf {c in NONLABS, r in ROOMS, (p,b) in SLOTS[c]: x[c,r,p,b] > 0.5}
     "   %-4s %-4s %-4s %s\n", c, r, p, b;
 printf {c in LABS, r in ROOMS, (p,b) in LAB_SLOTS[c]: y[c,r,p,b] > 0.5}
@@ -100,7 +100,7 @@ if card(UNLISTED) > 0 then {
   printf "   warning: no ALLOWED_PATTERNS (all patterns used):"; printf {c in UNLISTED} " %s", c; printf "\n"; }
 if card(COHORT_MISSING) > 0 then {
   printf "   not offered:"; printf {(h,n) in COHORT_MISSING} " %s/%s", h, n; printf "\n"; }
-printf "   score: %g   cohort overlaps: %g\n", Score, sum {h in COHORTS, d in DAYS, b in BLOCKS} Overlap[h,d,b];
+printf "   score: %g   cohort overlaps: %g\n", Score, sum {(h,c1,c2) in COHORT_PAIRS} Overlap[h,c1,c2];
 printf {c in NONLABS, r in ROOMS, (p,b) in SLOTS[c]: x[c,r,p,b] > 0.5}
     "   %-4s %-4s %-4s %s\n", c, r, p, b;
 printf {c in LABS, r in ROOMS, (p,b) in LAB_SLOTS[c]: y[c,r,p,b] > 0.5}
@@ -165,4 +165,4 @@ if card(UNLISTED) > 0 then {
   printf "   warning: no ALLOWED_PATTERNS (all patterns used):"; printf {c in UNLISTED} " %s", c; printf "\n"; }
 if card(COHORT_MISSING) > 0 then {
   printf "   not offered:"; printf {(h,n) in COHORT_MISSING} " %s/%s", h, n; printf "\n"; }
-printf "   score: %g (expect -4)   cohort overlaps: %g (expect 2)\n", Score, sum {h in COHORTS, d in DAYS, b in BLOCKS} Overlap[h,d,b];
+printf "   score: %g (expect -1)   cohort overlaps: %g (expect 1)\n", Score, sum {(h,c1,c2) in COHORT_PAIRS} Overlap[h,c1,c2];

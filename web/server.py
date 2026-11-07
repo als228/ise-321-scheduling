@@ -57,7 +57,7 @@ printf "STATUS\t%s\n", solve_result >> "{out}";
 printf "TIME\t%.3f\n", _solve_elapsed_time >> "{out}";
 printf "SIZE\t%d\t%d\n", _nvars, _ncons >> "{out}";
 if solve_result = "solved" then {{
-  printf "SCORE\t%g\t%g\n", Score, sum {{h in COHORTS, d in DAYS, b in BLOCKS}} Overlap[h,d,b] >> "{out}";
+  printf "SCORE\t%g\t%g\n", Score, sum {{(h,c1,c2) in COHORT_PAIRS}} Overlap[h,c1,c2] >> "{out}";
   printf {{c in NONLABS, r in ROOMS, (p,b) in SLOTS[c]: x[c,r,p,b] > 0.5}}
     "ASSIGN\t%s\t%s\t%s\t%d\t1\n", c, r, p, b >> "{out}";
   printf {{c in LABS, r in ROOMS, (p,b) in LAB_SLOTS[c]: y[c,r,p,b] > 0.5}}

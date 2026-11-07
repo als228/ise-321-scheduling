@@ -1,5 +1,5 @@
 # ===================== SETS =====================
-set COURSES;
+set COURSES ordered;  # ordered so each cohort course pair can be counted only once
 set LABS within COURSES;
 set NONLABS = COURSES diff LABS;
 set PROFESSORS;
@@ -69,6 +69,9 @@ set COHORTS = setof {(h,n) in COHORT_NUMS} h;
 set IN_COHORT = {h in COHORTS, c in COURSES:
     exists {(h2,n) in COHORT_NUMS: h2 = h}
         match(c, "(^|[^0-9])" & n & "([^0-9]|$)") > 0};
+# Unique pairs of courses within the same cohort
+set COHORT_PAIRS = {h in COHORTS, c1 in COURSES, c2 in COURSES:
+        (h,c1) in IN_COHORT and (h,c2) in IN_COHORT and ord(c1) < ord(c2)};
 set COHORT_MISSING = {(h,n) in COHORT_NUMS:
     not exists {c in COURSES} match(c, "(^|[^0-9])" & n & "([^0-9]|$)") > 0};
 
@@ -78,7 +81,7 @@ set COHORT_MISSING = {(h,n) in COHORT_NUMS:
 # block 1 and anything after block 6 are not.
 param good {b in BLOCKS} default (if b >= 2 and b <= 6 then 1 else 0);
 
-# points lost per cohort overlap (per day and block)
+# points lost per overlapping course pair from same cohort 
 param W >= 0 default 3;
 
 # ===================== VARIABLES =====================
@@ -86,13 +89,12 @@ var x {c in NONLABS, ROOMS, SLOTS[c]}  binary;    # 1 if course meets in room r,
 var y {c in LABS, ROOMS, LAB_SLOTS[c]} binary;    # 1 if lab STARTS in room r, pattern p, block b
 
 
-# extra same-cohort classes in session on day d, block b
-# (2 classes at once -> 1, 3 classes -> 2)
-var Overlap {COHORTS, DAYS, BLOCKS} >= 0;
+# 1 if two courses in the same cohort overlap at least once during the week
+var Overlap {(h,c1,c2) in COHORT_PAIRS} binary;
 
 # ===================== OBJECTIVE =====================
 # Score = 1 point for every class meeting in a good block
-#       - W points for every cohort overlap
+#       - W points for every overlapping same cohort course pair
 
 # score each course once based on its assigned time, rather than meeting occurence;
 # labs use the average score of the 2 occupied blocks
@@ -100,7 +102,7 @@ var Overlap {COHORTS, DAYS, BLOCKS} >= 0;
 maximize Score:
     sum {c in NONLABS, r in ROOMS, (p,b) in SLOTS[c]} good[b] * x[c,r,p,b]
       + sum {c in LABS, r in ROOMS, (p,b) in LAB_SLOTS[c]} ((good[b] + good[b+1]) / 2) * y[c,r,p,b]
-  - W * sum {h in COHORTS, d in DAYS, b in BLOCKS} Overlap[h,d,b];
+  - W * sum {(h,c1,c2) in COHORT_PAIRS} Overlap[h,c1,c2];
 
 # ===================== CONSTRAINTS =====================
 
@@ -136,9 +138,8 @@ subject to DeptProfOnly {(d,b) in PROF_ONLY}:
   + sum {(c,p,s) in Y_AT[d,b], r in ROOMS: (d,b,instructor[c]) not in PROF_ONLY_OK} y[c,r,p,s] = 0;
 
 # ---------- cohorts (soft) ----------
-# Overlap must cover (number of cohort classes in session) - 1. Maximizing
-# Score pushes it down to exactly that, or 0 when nothing clashes.
-subject to CohortOverlap {h in COHORTS, d in DAYS, b in BLOCKS}:
-    sum {(c,p) in X_AT[d,b], r in ROOMS: (h,c) in IN_COHORT} x[c,r,p,b]
-  + sum {(c,p,s) in Y_AT[d,b], r in ROOMS: (h,c) in IN_COHORT} y[c,r,p,s]
-  - 1 <= Overlap[h,d,b];
+# Mark a cohort course pair as overlapping if both courses meet at the same day/block
+subject to CohortPairOverlap {(h,c1,c2) in COHORT_PAIRS, d in DAYS, b in BLOCKS}:
+    sum {(c,p) in X_AT[d,b], r in ROOMS: c = c1 or c = c2} x[c,r,p,b]
+  + sum {(c,p,s) in Y_AT[d,b], r in ROOMS: c = c1 or c = c2} y[c,r,p,s]
+  <= 1 + Overlap[h,c1,c2];     # if both course are active, Overlap must be 1

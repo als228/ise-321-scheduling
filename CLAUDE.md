@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-An AMPL integer program that builds a course timetable for the ISE department (Fall 2026). It places each course in a room, a meeting pattern and a time block, with no room or professor clashes. It maximizes a `Score`: 1 point for each class meeting in a good block, minus `W` points for each same-cohort overlap.
+An AMPL integer program that builds a course timetable for the ISE department (Fall 2026). It places each course in a room, a meeting pattern and a time block, with no room or professor clashes. It maximizes a `Score`: each course earns a time-quality score based on its assigned block(s), minus `W` points for each overlapping same-cohort course pair.
 
 ## Commands
 
@@ -33,7 +33,7 @@ Web UI: `python3 web/server.py`, then open http://127.0.0.1:8321. It uses only t
   - `y[c,r,p,s]` is for `LABS` and marks the lab's *start* block `s`. A lab takes blocks `s` and `s+1`, so it can only start in `LAB_BLOCKS = 1..K-1`.
 - The clash constraints (`NoRoomClash`, `NoProfClash`) are indexed by **(day, block)**, not by slot. A pattern is spread over its days, and a lab adds to both block `s` and block `s+1`. `X_AT[d,b]` (pairs `(c,p)` for `x`) and `Y_AT[d,b]` (triples `(c,p,s)` for `y`) already do this expansion, so every resource constraint is `sum over X_AT + sum over Y_AT`. New constraints should use them too.
 - **Department rules** are hard constraints driven by data sets, and all of them default to empty: `CLOSED` (day, block), `ROOM_CLOSED` (room, day, block), `GRAD_CLOSED` (day, block, for `GRAD_COURSES`) and `PROF_ONLY` (day, block) with `PROF_ONLY_OK` (day, block, professor). `GRAD_COURSES` is derived from course names: any name containing a 4XX number, so cross-listed `ISE334_434` counts.
-- **Objective (`maximize Score`):** `good[b]` (default 1 for blocks 2–6, else 0) is earned for every (day, block) a class occupies, so labs earn per block. `Overlap[h,d,b] >= (cohort h classes in session) − 1` is subtracted with weight `W` (default 3). Both defaults can be overridden in data.
+- **Objective (`maximize Score`):** one-block courses earn `good[b]` based on their assigned block, while two-block courses earn the average of `good[b]` and `good[b+1]`, so each course has a maximum time-quality score of 1. Each same-cohort course pair that overlaps at least once during the week is counted once through `Overlap[h,c1,c2]` and penalized by `W` (default 3).
 - **Cohorts** come from `COHORT_NUMS`, which is a list of (cohort, course number) pairs. A number matches every course whose name contains it as a whole number, so `172` gives `ISE172` and `ISE172_L`. That lets the same list go in every semester. `IN_COHORT` holds the matched (cohort, course) pairs, and `COHORT_MISSING` lists numbers not offered this term. That is expected for semester-specific courses; `tests.run` prints them as `not offered:` and the web UI shows them in a Cohorts callout.
 - `instructor[c]` fixes the professor for each course. `SECTIONS_OF[f]` is derived from it.
 - `ALLOWED_PATTERNS[c]` (from the data) limits the patterns a course may use, and `PATTERNS_OF[c]` is the set actually used. A course with no entry falls back to every pattern and is listed in `UNLISTED`. `tests.run` prints it as a `warning:` line and the web UI shows it as a callout. Because `SLOTS[c]` and `LAB_SLOTS[c]` are indexed by course, loops over assignments must use `(p,b) in SLOTS[c]`.
@@ -59,7 +59,7 @@ Web UI: `python3 web/server.py`, then open http://127.0.0.1:8321. It uses only t
 
 ## To do: more soft goals
 
-Done: early/late blocks (flat `good[b]`), cohort overlaps, and the department rules (hard). Count every new term **per meeting** (once per day in `DAYS_OF[p]`), using `X_AT`/`Y_AT` so labs count for both blocks, and add it to `Score` as a reward or a weighted penalty.
+Done: early/late block preferences, same-cohort course-pair overlaps, and the department rules (hard). Time-quality terms are scored per course rather than per meeting occurrence; `X_AT`/`Y_AT` are still used for constraints that need to know which courses are active at each day/block.
 
 1. **Professor preferences.** Soft: a `pref` param over (professor, day, block), for example as flat triples. Hard: `UNAVAILABLE` (professor, day, block) triples, enforced like `DeptProfOnly`.
    - *Data needed:* for each professor, the times they can't teach and the times they'd rather avoid.

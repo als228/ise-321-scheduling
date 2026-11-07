@@ -1,7 +1,7 @@
-# Cohort overlap -- should solve, Score = -2
-# Three TR courses in one cohort, two rooms, two blocks: two of them must share
-# a block, so one overlap on Tue and one on Thu (2 total). Block 1 is not a good
-# block, so the best is two courses at block 2 (4 points) - 3*2 = -2.
+# Cohort overlap -- should solve, Score = -1
+# Three TR courses in one cohort, two rooms, two blocks: two of them must share a block, 
+# creating one overlapping course pair. so one overlap on Tue and one on Thu (2 total). Block 1 
+# is not a good block, so the best is two courses at block 2 (2 points) - 3*1 = -1.
 # Also checks COHORT_MISSING: number 999 is not offered.
 set COURSES    := ISE101  ISE102  ISE103 ;
 set LABS       := ;
