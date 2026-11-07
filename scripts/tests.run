@@ -165,4 +165,4 @@ if card(UNLISTED) > 0 then {
   printf "   warning: no ALLOWED_PATTERNS (all patterns used):"; printf {c in UNLISTED} " %s", c; printf "\n"; }
 if card(COHORT_MISSING) > 0 then {
   printf "   not offered:"; printf {(h,n) in COHORT_MISSING} " %s/%s", h, n; printf "\n"; }
-printf "   score: %g (expect -2)   cohort overlaps: %g (expect 2)\n", Score, sum {h in COHORTS, d in DAYS, b in BLOCKS} Overlap[h,d,b];
+printf "   score: %g (expect -4)   cohort overlaps: %g (expect 2)\n", Score, sum {h in COHORTS, d in DAYS, b in BLOCKS} Overlap[h,d,b];

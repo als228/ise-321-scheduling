@@ -93,10 +93,13 @@ var Overlap {COHORTS, DAYS, BLOCKS} >= 0;
 # ===================== OBJECTIVE =====================
 # Score = 1 point for every class meeting in a good block
 #       - W points for every cohort overlap
+
+# score each course once based on its assigned time, rather than meeting occurence;
+# labs use the average score of the 2 occupied blocks
+
 maximize Score:
-    sum {d in DAYS, b in BLOCKS} good[b] * (
-        sum {(c,p) in X_AT[d,b], r in ROOMS} x[c,r,p,b]
-      + sum {(c,p,s) in Y_AT[d,b], r in ROOMS} y[c,r,p,s] )
+    sum {c in NONLABS, r in ROOMS, (p,b) in SLOTS[c]} good[b] * x[c,r,p,b]
+      + sum {c in LABS, r in ROOMS, (p,b) in LAB_SLOTS[c]} ((good[b] + good[b+1]) / 2) * y[c,r,p,b]
   - W * sum {h in COHORTS, d in DAYS, b in BLOCKS} Overlap[h,d,b];
 
 # ===================== CONSTRAINTS =====================
