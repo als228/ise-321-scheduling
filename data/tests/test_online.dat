@@ -1,0 +1,17 @@
+# Online course -- should solve
+# Same as test_room_clash: three TR courses but only two TR slots in the one
+# room. C is ONLINE, so it needs no room and can share a block with A or B.
+set COURSES    := A  B  C ;
+set LABS       := ;
+set PROFESSORS := P1  P2  P3 ;
+set ROOMS      := R1 ;
+set DAYS       := Mon  Tue  Wed  Thu  Fri ;
+param K        := 2 ;
+set PATTERNS   := MW  TR ;
+set DAYS_OF[MW] := Mon Wed ;
+set DAYS_OF[TR] := Tue Thu ;
+param instructor := A P1   B P2   C P3 ;
+set ALLOWED_PATTERNS[A] := TR ;
+set ALLOWED_PATTERNS[B] := TR ;
+set ALLOWED_PATTERNS[C] := TR ;
+set ONLINE := C ;

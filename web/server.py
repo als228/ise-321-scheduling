@@ -40,6 +40,7 @@ printf "LOADED\n" >> "{out}";
 printf "K\t%d\n", K >> "{out}";
 printf {{d in DAYS}} "DAY\t%s\n", d >> "{out}";
 printf {{r in ROOMS}} "ROOM\t%s\n", r >> "{out}";
+printf {{c in ONLINE}} "ONLINE\t%s\n", c >> "{out}";
 printf {{f in PROFESSORS}} "PROF\t%s\n", f >> "{out}";
 printf {{p in PATTERNS}} "PATTERN\t%s\n", p >> "{out}";
 printf {{p in PATTERNS, d in DAYS_OF[p]}} "PATDAY\t%s\t%s\n", p, d >> "{out}";
@@ -58,9 +59,9 @@ printf "TIME\t%.3f\n", _solve_elapsed_time >> "{out}";
 printf "SIZE\t%d\t%d\n", _nvars, _ncons >> "{out}";
 if solve_result = "solved" then {{
   printf "SCORE\t%g\t%g\n", Score, sum {{(h,c1,c2) in COHORT_PAIRS}} Overlap[h,c1,c2] >> "{out}";
-  printf {{c in NONLABS, r in ROOMS, (p,b) in SLOTS[c]: x[c,r,p,b] > 0.5}}
+  printf {{c in NONLABS, r in ROOMS_OF[c], (p,b) in SLOTS[c]: x[c,r,p,b] > 0.5}}
     "ASSIGN\t%s\t%s\t%s\t%d\t1\n", c, r, p, b >> "{out}";
-  printf {{c in LABS, r in ROOMS, (p,b) in LAB_SLOTS[c]: y[c,r,p,b] > 0.5}}
+  printf {{c in LABS, r in ROOMS_OF[c], (p,b) in LAB_SLOTS[c]: y[c,r,p,b] > 0.5}}
     "ASSIGN\t%s\t%s\t%s\t%d\t2\n", c, r, p, b >> "{out}";
 }}
 '''
@@ -90,7 +91,7 @@ def run_ampl(dat_text, solve=True):
 def parse_report(text, log, solve):
     res = {"status": "error", "log": log.strip(), "instance": None, "assignments": []}
     inst = {"K": 0, "days": [], "rooms": [], "professors": [], "patterns": {}, "courses": [],
-            "unlisted": [], "cohorts": {}, "cohort_missing": []}
+            "unlisted": [], "cohorts": {}, "cohort_missing": [], "online": []}
     loaded = False
     for line in text.splitlines():
         f = line.split("\t")
@@ -113,6 +114,8 @@ def parse_report(text, log, solve):
             inst["courses"].append({"code": f[1], "instructor": f[2], "lab": f[3] == "1"})
         elif tag == "UNLISTED":
             inst["unlisted"].append(f[1])
+        elif tag == "ONLINE":
+            inst["online"].append(f[1])
         elif tag == "COHORT":
             inst["cohorts"].setdefault(f[1], []).append(f[2])
         elif tag == "COHORTMISSING":

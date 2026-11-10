@@ -511,6 +511,22 @@ async function saveBuilder() {
 }
 
 // ===================== schedule =====================
+const ONLINE_ROOM = "Online";   // pseudo-room the model gives ONLINE courses
+
+// Online courses may share a time, so on each day they get as many "Online"
+// rows as needed: a course goes in the first row that is free at its blocks.
+function onlineLanes(items) {
+  const ends = [], lane = new Map();
+  for (const it of [...items].sort((a, b) => a.block - b.block)) {
+    let i = ends.findIndex((end) => end < it.block);
+    if (i < 0) { i = ends.length; ends.push(0); }
+    ends[i] = it.block + it.length - 1;
+    lane.set(it, i);
+  }
+  const labels = ends.map((_, i) => (i ? `${ONLINE_ROOM} ${i + 1}` : ONLINE_ROOM));
+  return { lane, labels };
+}
+
 function derive(res) {
   const inst = res.instance;
   const course = Object.fromEntries(inst.courses.map((c) => [c.code, c]));
@@ -521,6 +537,7 @@ function derive(res) {
     instructor: course[a.course]?.instructor ?? "?",
     lab: a.length > 1,
     days: inst.patterns[a.pattern] || [],
+    online: a.room === ONLINE_ROOM,
   }));
   return { inst, items, color };
 }
@@ -557,12 +574,15 @@ function timetableView({ inst, items, color }) {
   const days = state.sched.day === "all" ? inst.days : [state.sched.day];
   return days.map((d) => {
     const today = items.filter((it) => it.days.includes(d));
+    const { lane, labels } = onlineLanes(today.filter((it) => it.online));
+    const rows = [...inst.rooms, ...labels];
+    const row = (it) => (it.online ? inst.rooms.length + lane.get(it) : inst.rooms.indexOf(it.room)) + 2;
     const chips = today.map((it) => chip(it, color, it.instructor,
-      `grid-row:${inst.rooms.indexOf(it.room) + 2};grid-column:${it.block + 1} / span ${it.length}`)).join("");
+      `grid-row:${row(it)};grid-column:${it.block + 1} / span ${it.length}`)).join("");
     return `
       <div class="day-block">
         <div class="day-title"><h3>${esc(dayName(d))}</h3><span>${today.length} meeting${today.length === 1 ? "" : "s"}</span></div>
-        ${gridHTML({ cols: blockRange(inst.K), rows: inst.rooms, rowLabel: esc, colLabel: timeLabel,
+        ${gridHTML({ cols: blockRange(inst.K), rows, rowLabel: esc, colLabel: timeLabel,
                      corner: "Room", colWidth: "104px", labelWidth: "96px", items: chips })}
       </div>`;
   }).join("");
@@ -629,7 +649,7 @@ function renderSchedule() {
   const inst = res.instance;
   const solved = res.status === "solved" && inst;
   const d = solved ? derive(res) : null;
-  const used = d ? d.items.reduce((s, it) => s + it.length * it.days.length, 0) : 0;
+  const used = d ? d.items.filter((it) => !it.online).reduce((s, it) => s + it.length * it.days.length, 0) : 0;
   const cap = inst ? inst.rooms.length * inst.days.length * inst.K : 0;
   const expectNote = res.expect
     ? `<span class="badge plain ${res.status === res.expect ? "pass" : "fail"}">${res.status === res.expect ? "Matches expected" : `Expected ${esc(res.expect)}`}</span>` : "";
@@ -647,6 +667,7 @@ function renderSchedule() {
       ${inst ? `<div class="stats">
         ${stat("Courses", inst.courses.length)}
         ${stat("Labs", inst.courses.filter((c) => c.lab).length)}
+        ${inst.online?.length ? stat("Online", inst.online.length) : ""}
         ${stat("Rooms", inst.rooms.length)}
         ${stat("Professors", inst.professors.length)}
         ${stat("Blocks / day", inst.K)}
@@ -698,7 +719,7 @@ function renderSchedule() {
       content = timetableView(d);
     } else if (s.mode === "room" || s.mode === "prof") {
       const key = s.mode === "room" ? "room" : "instructor";
-      const list = s.mode === "room" ? inst.rooms : inst.professors;
+      const list = s.mode === "room" ? [...inst.rooms, ...(inst.online?.length ? [ONLINE_ROOM] : [])] : inst.professors;
       const cur = s.mode === "room" ? s.room : s.prof;
       controls = `<div class="pills">${list.map((x) => `
         <button class="pill ${cur === x ? "on" : ""}" data-pick="${esc(x)}" ${s.mode === "prof" ? `style="--c:${d.color[x]}"` : ""}>

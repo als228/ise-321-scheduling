@@ -20,9 +20,9 @@ if card(UNLISTED) > 0 then {
 if card(COHORT_MISSING) > 0 then {
   printf "   not offered:"; printf {(h,n) in COHORT_MISSING} " %s/%s", h, n; printf "\n"; }
 printf "   score: %g   cohort overlaps: %g\n", Score, sum {(h,c1,c2) in COHORT_PAIRS} Overlap[h,c1,c2];
-printf {c in NONLABS, r in ROOMS, (p,b) in SLOTS[c]: x[c,r,p,b] > 0.5}
+printf {c in NONLABS, r in ROOMS_OF[c], (p,b) in SLOTS[c]: x[c,r,p,b] > 0.5}
     "   %-4s %-4s %-4s %s\n", c, r, p, b;
-printf {c in LABS, r in ROOMS, (p,b) in LAB_SLOTS[c]: y[c,r,p,b] > 0.5}
+printf {c in LABS, r in ROOMS_OF[c], (p,b) in LAB_SLOTS[c]: y[c,r,p,b] > 0.5}
     "   %-4s %-4s %-4s %s + %s  (lab)\n", c, r, p, b, b + 1;
 
 # ---------- Test 1: feasible instance ----------
@@ -34,9 +34,9 @@ if card(UNLISTED) > 0 then {
   printf "   warning: no ALLOWED_PATTERNS (all patterns used):"; printf {c in UNLISTED} " %s", c; printf "\n"; }
 if card(COHORT_MISSING) > 0 then {
   printf "   not offered:"; printf {(h,n) in COHORT_MISSING} " %s/%s", h, n; printf "\n"; }
-printf {c in NONLABS, r in ROOMS, (p,b) in SLOTS[c]: x[c,r,p,b] > 0.5}
+printf {c in NONLABS, r in ROOMS_OF[c], (p,b) in SLOTS[c]: x[c,r,p,b] > 0.5}
     "   %-4s %-4s %-4s %s\n", c, r, p, b;
-printf {c in LABS, r in ROOMS, (p,b) in LAB_SLOTS[c]: y[c,r,p,b] > 0.5}
+printf {c in LABS, r in ROOMS_OF[c], (p,b) in LAB_SLOTS[c]: y[c,r,p,b] > 0.5}
     "   %-4s %-4s %-4s %s + %s  (lab)\n", c, r, p, b, b + 1;
 
 # ---------- Test 2: room clash ----------
@@ -88,7 +88,7 @@ if card(UNLISTED) > 0 then {
   printf "   warning: no ALLOWED_PATTERNS (all patterns used):"; printf {c in UNLISTED} " %s", c; printf "\n"; }
 if card(COHORT_MISSING) > 0 then {
   printf "   not offered:"; printf {(h,n) in COHORT_MISSING} " %s/%s", h, n; printf "\n"; }
-printf {c in NONLABS, r in ROOMS, (p,b) in SLOTS[c]: x[c,r,p,b] > 0.5}
+printf {c in NONLABS, r in ROOMS_OF[c], (p,b) in SLOTS[c]: x[c,r,p,b] > 0.5}
     "   %-4s %-4s %-4s %s\n", c, r, p, b;
 
 # ---------- Test 7: Spring 2027 instance ----------
@@ -101,9 +101,9 @@ if card(UNLISTED) > 0 then {
 if card(COHORT_MISSING) > 0 then {
   printf "   not offered:"; printf {(h,n) in COHORT_MISSING} " %s/%s", h, n; printf "\n"; }
 printf "   score: %g   cohort overlaps: %g\n", Score, sum {(h,c1,c2) in COHORT_PAIRS} Overlap[h,c1,c2];
-printf {c in NONLABS, r in ROOMS, (p,b) in SLOTS[c]: x[c,r,p,b] > 0.5}
+printf {c in NONLABS, r in ROOMS_OF[c], (p,b) in SLOTS[c]: x[c,r,p,b] > 0.5}
     "   %-4s %-4s %-4s %s\n", c, r, p, b;
-printf {c in LABS, r in ROOMS, (p,b) in LAB_SLOTS[c]: y[c,r,p,b] > 0.5}
+printf {c in LABS, r in ROOMS_OF[c], (p,b) in LAB_SLOTS[c]: y[c,r,p,b] > 0.5}
     "   %-4s %-4s %-4s %s + %s  (lab)\n", c, r, p, b, b + 1;
 
 # ---------- Test 8: closed slot ----------
@@ -136,25 +136,28 @@ if card(UNLISTED) > 0 then {
 if card(COHORT_MISSING) > 0 then {
   printf "   not offered:"; printf {(h,n) in COHORT_MISSING} " %s/%s", h, n; printf "\n"; }
 
-# ---------- Test 11: prof-only ----------
+# ---------- Test 11: professor closed ----------
 reset data;
-data data/tests/test_dept_prof_only.dat;
+data data/tests/test_prof_closed.dat;
 solve;
-printf "\nTEST 11 prof-only       expect: infeasible  got: %s\n", solve_result;
+printf "\nTEST 11 prof closed     expect: infeasible  got: %s\n", solve_result;
 if card(UNLISTED) > 0 then {
   printf "   warning: no ALLOWED_PATTERNS (all patterns used):"; printf {c in UNLISTED} " %s", c; printf "\n"; }
 if card(COHORT_MISSING) > 0 then {
   printf "   not offered:"; printf {(h,n) in COHORT_MISSING} " %s/%s", h, n; printf "\n"; }
 
-# ---------- Test 12: prof allowed ----------
+# ---------- Test 12: professor preference (soft) ----------
 reset data;
-data data/tests/test_dept_prof_allowed.dat;
+data data/tests/test_prof_pref.dat;
 solve;
-printf "\nTEST 12 prof allowed    expect: solved      got: %s\n", solve_result;
+printf "\nTEST 12 prof pref       expect: solved      got: %s\n", solve_result;
 if card(UNLISTED) > 0 then {
   printf "   warning: no ALLOWED_PATTERNS (all patterns used):"; printf {c in UNLISTED} " %s", c; printf "\n"; }
 if card(COHORT_MISSING) > 0 then {
   printf "   not offered:"; printf {(h,n) in COHORT_MISSING} " %s/%s", h, n; printf "\n"; }
+printf "   score: %g (expect 3.5)\n", Score;
+printf {c in NONLABS, r in ROOMS_OF[c], (p,b) in SLOTS[c]: x[c,r,p,b] > 0.5}
+    "   %-4s %-4s %-4s %s\n", c, r, p, b;
 
 # ---------- Test 13: cohort overlap (soft) ----------
 reset data;
@@ -166,3 +169,17 @@ if card(UNLISTED) > 0 then {
 if card(COHORT_MISSING) > 0 then {
   printf "   not offered:"; printf {(h,n) in COHORT_MISSING} " %s/%s", h, n; printf "\n"; }
 printf "   score: %g (expect -1)   cohort overlaps: %g (expect 1)\n", Score, sum {(h,c1,c2) in COHORT_PAIRS} Overlap[h,c1,c2];
+
+# ---------- Test 14: online course needs no room ----------
+reset data;
+data data/tests/test_online.dat;
+solve;
+printf "\nTEST 14 online          expect: solved      got: %s\n", solve_result;
+printf {c in NONLABS, r in ROOMS_OF[c], (p,b) in SLOTS[c]: x[c,r,p,b] > 0.5}
+    "   %-4s %-6s %-4s %s\n", c, r, p, b;
+
+# ---------- Test 15: online courses still obey professor clash ----------
+reset data;
+data data/tests/test_online_prof_clash.dat;
+solve;
+printf "\nTEST 15 online prof     expect: infeasible  got: %s\n", solve_result;

@@ -1,0 +1,19 @@
+# Professor preference -- should solve, Score = 3.5
+# Blocks 2 and 3 are good (default good[b]), so both courses earn 1 for time
+# anywhere except block 1.
+#   P1 prefers Mon 3 and Wed 3 -> A on MW 3 earns the full W_PREF = 1.
+#   P2 prefers only Tue 2      -> B on TR 2 earns 1/2 (one of its two days).
+# Best: A = MW 3, B = TR 2, Score = (1 + 1) + (1 + 0.5) = 3.5.
+set COURSES    := A  B ;
+set LABS       := ;
+set PROFESSORS := P1  P2 ;
+set ROOMS      := R1  R2 ;
+set DAYS       := Mon  Tue  Wed  Thu  Fri ;
+param K        := 3 ;
+set PATTERNS   := MW  TR ;
+set DAYS_OF[MW] := Mon Wed ;
+set DAYS_OF[TR] := Tue Thu ;
+param instructor := A P1   B P2 ;
+set ALLOWED_PATTERNS[A] := MW TR ;
+set ALLOWED_PATTERNS[B] := MW TR ;
+set PROF_PREF := P1 Mon 3   P1 Wed 3   P2 Tue 2 ;

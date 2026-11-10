@@ -113,14 +113,27 @@ set ALLOWED_PATTERNS[ISE254_W]   := M T W R F ;
 set ALLOWED_PATTERNS[ISE336_436] := M T W R F ;
 set ALLOWED_PATTERNS[ISE382_482] := M T W R F ;
 
+# ===================== ONLINE =====================
+# courses taught fully online: no room, no room clash
+set ONLINE := ;
+
 # ===================== DEPARTMENT RULES =====================
 # block 3 = 10:45, block 4 = 12:10
 set CLOSED := Thu 3   Tue 4 ;               # no classes at all
 set ROOM_CLOSED := MO453 Tue 3   MO375 Thu 4 ;
 set GRAD_CLOSED := Thu 4 ;                  # no 4XX courses (incl. cross-listed)
-set PROF_ONLY   := Thu 4 ;                  # only the professors listed below
-# Derya Pamukcu, Emory Zimmers, Eugene Perevalov, Louis Zuluaga
-set PROF_ONLY_OK := Thu 4 Pamukcu   Thu 4 Zimmers   Thu 4 Perevalov   Thu 4 Zuluaga ;
+
+# Thu block 4: only Pamukcu, Zimmers, Perevalov and Zuluaga may teach.
+# Every other professor this term is closed then. When adding a professor,
+# add them here too unless they are allowed on Thu 4.
+set PROF_CLOSED :=
+  Akus Thu 4   Alexandrescu Thu 4   Curtis Thu 4   Goldberg Thu 4
+  Liza Thu 4   Marangos Thu 4   Motsko Thu 4   Nyberg Thu 4
+  Paredes Thu 4   Ralphs Thu 4   Shabnam Thu 4   Terlaky Thu 4
+  Tosin Thu 4 ;
+
+# preferred teaching times (soft): professor day block
+set PROF_PREF := ;
 
 # ===================== COHORTS =====================
 # (cohort, course number). Same list in every semester; numbers not offered

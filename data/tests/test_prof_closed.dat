@@ -1,6 +1,6 @@
-# Professor-only slot -- should be INFEASIBLE
-# Two TR courses in one room, so one must take TR1. Thu block 1 is reserved
-# for P3 (DeptProfOnly), who teaches neither.
+# Professor closed -- should be INFEASIBLE
+# Two TR courses in one room need TR1 and TR2. Both professors are closed on
+# Thu block 2 (ProfClosed), so both would need TR1.
 set COURSES    := A  B ;
 set LABS       := ;
 set PROFESSORS := P1  P2 ;
@@ -13,5 +13,4 @@ set DAYS_OF[TR] := Tue Thu ;
 param instructor := A P1   B P2 ;
 set ALLOWED_PATTERNS[A] := TR ;
 set ALLOWED_PATTERNS[B] := TR ;
-set PROF_ONLY    := Thu 1 ;
-set PROF_ONLY_OK := Thu 1 P3 ;
+set PROF_CLOSED := P1 Thu 2   P2 Thu 2 ;

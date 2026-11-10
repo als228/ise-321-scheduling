@@ -10,7 +10,7 @@ solve;
 printf "solve_result: %s\n", solve_result;
 
 printf "course,room,pattern,start_block,end_block\n";
-printf {c in NONLABS, r in ROOMS, (p,b) in SLOTS[c]: x[c,r,p,b] > 0.5}
+printf {c in NONLABS, r in ROOMS_OF[c], (p,b) in SLOTS[c]: x[c,r,p,b] > 0.5}
     "%s,%s,%s,%s,%s\n", c, r, p, b, b;
-printf {c in LABS, r in ROOMS, (p,b) in LAB_SLOTS[c]: y[c,r,p,b] > 0.5}
+printf {c in LABS, r in ROOMS_OF[c], (p,b) in LAB_SLOTS[c]: y[c,r,p,b] > 0.5}
     "%s,%s,%s,%s,%s\n", c, r, p, b, b + 1;

@@ -1,0 +1,17 @@
+# Online course, professor clash -- should be INFEASIBLE
+# A, B and C are all online, so rooms are no limit, but P1 teaches all three
+# and there are only two TR blocks. Online courses still obey NoProfClash.
+set COURSES    := A  B  C ;
+set LABS       := ;
+set PROFESSORS := P1 ;
+set ROOMS      := R1 ;
+set DAYS       := Mon  Tue  Wed  Thu  Fri ;
+param K        := 2 ;
+set PATTERNS   := MW  TR ;
+set DAYS_OF[MW] := Mon Wed ;
+set DAYS_OF[TR] := Tue Thu ;
+param instructor := A P1   B P1   C P1 ;
+set ALLOWED_PATTERNS[A] := TR ;
+set ALLOWED_PATTERNS[B] := TR ;
+set ALLOWED_PATTERNS[C] := TR ;
+set ONLINE := A  B  C ;
