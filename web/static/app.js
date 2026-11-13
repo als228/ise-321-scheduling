@@ -789,7 +789,29 @@ function bindSchedule(el, d) {
   });
 }
 
+// ===================== theme =====================
+// Until the user clicks, the page follows the OS (prefers-color-scheme). A click pins
+// the opposite theme via <html data-theme> and saves it per browser.
+const systemDark = matchMedia("(prefers-color-scheme: dark)");
+const currentTheme = () => document.documentElement.dataset.theme || (systemDark.matches ? "dark" : "light");
+function syncThemeButton() {
+  const t = currentTheme(), btn = $("#theme-btn");
+  btn.classList.toggle("is-light", t === "light");
+  btn.classList.toggle("is-dark", t === "dark");
+  btn.title = t === "dark" ? "Switch to light mode" : "Switch to dark mode";
+  btn.setAttribute("aria-label", btn.title);
+}
+function toggleTheme() {
+  const next = currentTheme() === "dark" ? "light" : "dark";
+  document.documentElement.dataset.theme = next;
+  try { localStorage.setItem("theme", next); } catch (e) { /* storage blocked: still works for this visit */ }
+  syncThemeButton();
+}
+
 // ===================== boot =====================
+$("#theme-btn").onclick = toggleTheme;
+systemDark.addEventListener("change", syncThemeButton);
+syncThemeButton();
 $$(".tab").forEach((t) => (t.onclick = () => setView(t.dataset.view)));
 $('.tab[data-view="builder"]').hidden = !BUILDER_ENABLED;
 api("/api/datasets")

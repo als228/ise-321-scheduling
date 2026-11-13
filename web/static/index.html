@@ -8,7 +8,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="app.css">
+  <link rel="stylesheet" href="app.css?v=2">
+  <script>
+    // Apply the saved theme before first paint so the page doesn't flash.
+    try { const t = localStorage.getItem("theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+  </script>
 </head>
 <body>
   <header class="topbar">
@@ -20,11 +24,17 @@
           <div class="brand-sub">ISE 321 · AMPL integer program</div>
         </div>
       </div>
-      <nav class="tabs" role="tablist">
-        <button class="tab" data-view="datasets" role="tab">Datasets</button>
-        <button class="tab" data-view="builder" role="tab">Case builder</button>
-        <button class="tab" data-view="schedule" role="tab">Schedule <span id="tab-badge" class="tab-badge" hidden></span></button>
-      </nav>
+      <div class="topbar-right">
+        <nav class="tabs" role="tablist">
+          <button class="tab" data-view="datasets" role="tab">Datasets</button>
+          <button class="tab" data-view="builder" role="tab">Case builder</button>
+          <button class="tab" data-view="schedule" role="tab">Schedule <span id="tab-badge" class="tab-badge" hidden></span></button>
+        </nav>
+        <button id="theme-btn" class="theme-btn" type="button">
+          <svg class="i-sun" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3 3l1 1M12 12l1 1M3 13l1-1M12 4l1-1"/></svg>
+          <svg class="i-moon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M13.5 9.5A5.5 5.5 0 0 1 6.5 2.5a5.5 5.5 0 1 0 7 7z"/></svg>
+        </button>
+      </div>
     </div>
   </header>
 
@@ -35,6 +45,6 @@
   </main>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="app.js"></script>
+  <script src="app.js?v=2"></script>
 </body>
 </html>

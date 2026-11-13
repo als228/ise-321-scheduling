@@ -204,6 +204,12 @@ class Handler(SimpleHTTPRequestHandler):
         n = int(self.headers.get("Content-Length", 0))
         return json.loads(self.rfile.read(n) or b"{}")
 
+    def end_headers(self):
+        # Make the browser revalidate static files, so edits to app.css/app.js
+        # show up on reload instead of mixing a fresh index.html with stale assets.
+        self.send_header("Cache-Control", "no-cache")
+        super().end_headers()
+
     def do_GET(self):
         if self.path == "/api/datasets":
             return self.send_json(list_datasets())
