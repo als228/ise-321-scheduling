@@ -1,0 +1,19 @@
+# Dedicated course must use its room -- should be infeasible
+# R2 is dedicated to course number 100, which matches X100_L1, X100_L2 and
+# X100_L3 (but not X1000). Those three may only use R2, which has two TR
+# slots, even though R1 is free.
+set COURSES    := X100_L1  X100_L2  X100_L3  X1000 ;
+set PROFESSORS := P1  P2  P3  P4 ;
+set ROOMS      := R1  R2 ;
+set LABS       := ;
+set DAYS       := Mon  Tue  Wed  Thu  Fri ;
+param K        := 2 ;
+set PATTERNS   := MW  TR ;
+set DAYS_OF[MW] := Mon Wed ;
+set DAYS_OF[TR] := Tue Thu ;
+param instructor := X100_L1 P1   X100_L2 P2   X100_L3 P3   X1000 P4 ;
+set ALLOWED_PATTERNS[X100_L1] := TR ;
+set ALLOWED_PATTERNS[X100_L2] := TR ;
+set ALLOWED_PATTERNS[X100_L3] := TR ;
+set ALLOWED_PATTERNS[X1000]   := TR ;
+set DEDICATED_TO := R2 100 ;

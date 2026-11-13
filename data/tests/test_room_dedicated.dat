@@ -1,0 +1,18 @@
+# Dedicated room is off-limits to other courses -- should be infeasible
+# Two rooms give four TR slots for four TR courses, but R2 is dedicated to
+# course A (by name), so B, C and D must share R1's two TR slots.
+set COURSES    := A  B  C  D ;
+set PROFESSORS := P1  P2  P3  P4 ;
+set ROOMS      := R1  R2 ;
+set LABS       := ;
+set DAYS       := Mon  Tue  Wed  Thu  Fri ;
+param K        := 2 ;
+set PATTERNS   := MW  TR ;
+set DAYS_OF[MW] := Mon Wed ;
+set DAYS_OF[TR] := Tue Thu ;
+param instructor := A P1   B P2   C P3   D P4 ;
+set ALLOWED_PATTERNS[A] := TR ;
+set ALLOWED_PATTERNS[B] := TR ;
+set ALLOWED_PATTERNS[C] := TR ;
+set ALLOWED_PATTERNS[D] := TR ;
+set DEDICATED_TO := R2 A ;

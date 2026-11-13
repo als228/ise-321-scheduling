@@ -12,7 +12,46 @@ set DAYS;
 # availability and the time score.
 set ONLINE within COURSES default {};
 check: "Online" not in ROOMS;
-set ROOMS_OF {c in COURSES} = if c in ONLINE then {"Online"} else ROOMS;
+
+# ===================== ROOM PROPERTIES =====================
+# Read from a tabular  param: ROOMS: capacity controlled remote_ready := ...
+# block. The defaults let a data file list plain ROOMS and have every room
+# usable by every course.
+param capacity {ROOMS} >= 0 default 0;          # seats; 0 = unknown (shown only, not enforced)
+param controlled {ROOMS} binary default 1;      # 1 = the department may book it freely
+param remote_ready {ROOMS} binary default 0;    # 1 = equipped for a remote async section
+
+# courses with a remote async section: may only use remote_ready rooms
+set REMOTE within COURSES default {};
+
+# (room, course) pairs that reserve a room. An entry is either a course name
+# (ISE308_408: that course only) or a course number (216: every course whose
+# name contains it as a whole number, like COHORT_NUMS). It works both ways:
+# a matching course may only use its dedicated rooms, and a dedicated room
+# may only be used by matching courses. Rooms not in ROOMS are ignored, so
+# one list can go in every semester.
+set DEDICATED_TO dimen 2 default {};
+set DEDICATED = {r in ROOMS, c in COURSES: exists {(r2,n) in DEDICATED_TO: r2 = r}
+    (c = n or match(c, "(^|[^0-9])" & n & "([^0-9]|$)") > 0 and n not in COURSES)};
+set DEDICATED_ROOMS   = setof {(r,c) in DEDICATED} r;
+set DEDICATED_COURSES = setof {(r,c) in DEDICATED} c;
+
+# Every room rule is a filter here, so a room a course can't use never
+# becomes a variable:
+#   dedicated course    -> its dedicated rooms
+#   any other course    -> controlled rooms that aren't dedicated to anything
+#   remote async course -> additionally only remote_ready rooms
+set ROOMS_OF {c in COURSES} =
+    if c in ONLINE then {"Online"}
+    else {r in ROOMS:
+            ((c in DEDICATED_COURSES and (r,c) in DEDICATED) or
+             (c not in DEDICATED_COURSES and controlled[r] = 1
+                                         and r not in DEDICATED_ROOMS))
+            and (c not in REMOTE or remote_ready[r] = 1)};
+
+# in-person courses left with no room: the model is then infeasible, so
+# this is reported as a warning
+set NO_ROOM = {c in COURSES diff ONLINE: card(ROOMS_OF[c]) = 0};
 
 param K integer > 1;
 set BLOCKS = 1..K;                 # time blocks are represented by consecutive integers
@@ -65,9 +104,30 @@ set GRAD_CLOSED within {DAYS, BLOCKS} default {};
 # (professor, day, block) triples when that professor may NOT teach (hard)
 set PROF_CLOSED within {PROFESSORS, DAYS, BLOCKS} default {};
 
-# (professor, day, block) triples when that professor would LIKE to teach
-# (soft). Blocks not listed are still allowed, just not rewarded.
-set PROF_PREF within {PROFESSORS, DAYS, BLOCKS} default {};
+# Preferences (soft). Rows are keyed by a professor or by a course ("who").
+# If a course has any row of its own, its professor's rows are ignored for it.
+#   PREF_BLOCK   (who, block, weight): -1 = avoid .. 1 = want; unlisted = 0
+#   PREF_PATTERN (who, pattern, weight): 0 .. 1. If who lists any pattern,
+#                unlisted patterns get 0; with no pattern rows, every pattern
+#                gets 1. It only scales PREF_BLOCK, so it needs block rows.
+# A course earns W_PREF * pattern weight * block weight (averaged over a
+# lab's two blocks), so between -W_PREF and W_PREF.
+set PREF_WHO = PROFESSORS union COURSES;
+check: card(PROFESSORS inter COURSES) = 0;
+set PREF_BLOCK   within {PREF_WHO, BLOCKS}   default {};
+set PREF_PATTERN within {PREF_WHO, PATTERNS} default {};
+param pref_block   {PREF_BLOCK}   >= -1, <= 1;
+param pref_pattern {PREF_PATTERN} >= 0,  <= 1;
+
+# courses with rows of their own
+set PREF_COURSES = {c in COURSES:
+    (exists {(w,b) in PREF_BLOCK} w = c) or (exists {(w,p) in PREF_PATTERN} w = c)};
+param pref_key {c in COURSES} symbolic = if c in PREF_COURSES then c else instructor[c];
+param block_w {c in COURSES, b in BLOCKS} =
+    if (pref_key[c], b) in PREF_BLOCK then pref_block[pref_key[c], b] else 0;
+param pattern_w {c in COURSES, p in PATTERNS} =
+    if (pref_key[c], p) in PREF_PATTERN then pref_pattern[pref_key[c], p]
+    else if exists {(w,q) in PREF_PATTERN} w = pref_key[c] then 0 else 1;
 
 # ===================== COHORTS =====================
 # (cohort, course number) pairs, e.g. (junior, 172). A number covers every
@@ -97,15 +157,11 @@ param W >= 0 default 3;
 # points per course for meeting in its professor's preferred times
 param W_PREF >= 0 default 1;
 
-# share of a course's meeting-blocks that fall in PROF_PREF, times W_PREF.
-# An MW class with only Mon preferred earns W_PREF/2; a lab averages its
-# two blocks the same way.
+# preference points for each slot (see PREF_BLOCK / PREF_PATTERN above)
 param pref_x {c in NONLABS, (p,b) in SLOTS[c]} =
-    W_PREF * card {d in DAYS_OF[p]: (instructor[c],d,b) in PROF_PREF}
-           / card(DAYS_OF[p]);
+    W_PREF * pattern_w[c,p] * block_w[c,b];
 param pref_y {c in LABS, (p,s) in LAB_SLOTS[c]} =
-    W_PREF * card {d in DAYS_OF[p], bb in {s, s+1}: (instructor[c],d,bb) in PROF_PREF}
-           / (2 * card(DAYS_OF[p]));
+    W_PREF * pattern_w[c,p] * (block_w[c,s] + block_w[c,s+1]) / 2;
 
 # ===================== VARIABLES =====================
 var x {c in NONLABS, ROOMS_OF[c], SLOTS[c]}  binary;    # 1 if course meets in room r, pattern p, block b
@@ -116,7 +172,7 @@ var Overlap {(h,c1,c2) in COHORT_PAIRS} binary;
 
 # ===================== OBJECTIVE =====================
 # Score = time quality (up to 1 per course)
-#       + professor preference (up to W_PREF per course)
+#       + preferences (-W_PREF to W_PREF per course)
 #       - W points for every overlapping same cohort course pair
 
 # score each course once based on its assigned time, rather than meeting occurence;
@@ -138,10 +194,10 @@ subject to ScheduleLab {c in LABS}:
     sum {r in ROOMS_OF[c], (p,b) in LAB_SLOTS[c]} y[c,r,p,b] = 1;
 
 # A two-block lab occupies both its starting block s and the following block s+1.
-# Online courses have no room, so they are left out.
+# Only courses that may use room r count (online courses never can).
 subject to NoRoomClash {r in ROOMS, d in DAYS, b in BLOCKS}:
-    sum {(c,p) in X_AT[d,b]: c not in ONLINE} x[c,r,p,b]
-  + sum {(c,p,s) in Y_AT[d,b]: c not in ONLINE} y[c,r,p,s] <= 1;
+    sum {(c,p) in X_AT[d,b]: r in ROOMS_OF[c]} x[c,r,p,b]
+  + sum {(c,p,s) in Y_AT[d,b]: r in ROOMS_OF[c]} y[c,r,p,s] <= 1;
 
 subject to NoProfClash {f in PROFESSORS, d in DAYS, b in BLOCKS}:
     sum {(c,p) in X_AT[d,b], r in ROOMS_OF[c]: instructor[c] = f} x[c,r,p,b]
@@ -153,8 +209,8 @@ subject to DeptClosed {(d,b) in CLOSED}:
   + sum {(c,p,s) in Y_AT[d,b], r in ROOMS_OF[c]} y[c,r,p,s] = 0;
 
 subject to DeptRoomClosed {(r,d,b) in ROOM_CLOSED}:
-    sum {(c,p) in X_AT[d,b]: c not in ONLINE} x[c,r,p,b]
-  + sum {(c,p,s) in Y_AT[d,b]: c not in ONLINE} y[c,r,p,s] = 0;
+    sum {(c,p) in X_AT[d,b]: r in ROOMS_OF[c]} x[c,r,p,b]
+  + sum {(c,p,s) in Y_AT[d,b]: r in ROOMS_OF[c]} y[c,r,p,s] = 0;
 
 subject to DeptGradClosed {(d,b) in GRAD_CLOSED}:
     sum {(c,p) in X_AT[d,b], r in ROOMS_OF[c]: c in GRAD_COURSES} x[c,r,p,b]

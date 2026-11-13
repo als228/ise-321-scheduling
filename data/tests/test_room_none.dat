@@ -1,0 +1,16 @@
+# Course with no eligible room -- should be infeasible, with a
+# "no eligible room" warning for A
+# A has a remote async section but no room is remote_ready. B is fine.
+set COURSES    := A  B ;
+set PROFESSORS := P1  P2 ;
+set ROOMS      := R1  R2 ;
+set LABS       := ;
+set DAYS       := Mon  Tue  Wed  Thu  Fri ;
+param K        := 2 ;
+set PATTERNS   := MW  TR ;
+set DAYS_OF[MW] := Mon Wed ;
+set DAYS_OF[TR] := Tue Thu ;
+param instructor := A P1   B P2 ;
+set ALLOWED_PATTERNS[A] := TR ;
+set ALLOWED_PATTERNS[B] := TR ;
+set REMOTE := A ;

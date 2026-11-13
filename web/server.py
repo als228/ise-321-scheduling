@@ -39,13 +39,14 @@ data "{data}";
 printf "LOADED\n" >> "{out}";
 printf "K\t%d\n", K >> "{out}";
 printf {{d in DAYS}} "DAY\t%s\n", d >> "{out}";
-printf {{r in ROOMS}} "ROOM\t%s\n", r >> "{out}";
+printf {{r in ROOMS}} "ROOM\t%s\t%d\t%d\t%d\n", r, capacity[r], controlled[r], remote_ready[r] >> "{out}";
 printf {{c in ONLINE}} "ONLINE\t%s\n", c >> "{out}";
 printf {{f in PROFESSORS}} "PROF\t%s\n", f >> "{out}";
 printf {{p in PATTERNS}} "PATTERN\t%s\n", p >> "{out}";
 printf {{p in PATTERNS, d in DAYS_OF[p]}} "PATDAY\t%s\t%s\n", p, d >> "{out}";
 printf {{c in COURSES}} "COURSE\t%s\t%s\t%d\n", c, instructor[c], if c in LABS then 1 else 0 >> "{out}";
 printf {{c in UNLISTED}} "UNLISTED\t%s\n", c >> "{out}";
+printf {{c in NO_ROOM}} "NOROOM\t%s\n", c >> "{out}";
 printf {{(h,c) in IN_COHORT}} "COHORT\t%s\t%s\n", h, c >> "{out}";
 printf {{(h,n) in COHORT_MISSING}} "COHORTMISSING\t%s\t%s\n", h, n >> "{out}";
 {solve_block}
@@ -91,7 +92,7 @@ def run_ampl(dat_text, solve=True):
 def parse_report(text, log, solve):
     res = {"status": "error", "log": log.strip(), "instance": None, "assignments": []}
     inst = {"K": 0, "days": [], "rooms": [], "professors": [], "patterns": {}, "courses": [],
-            "unlisted": [], "cohorts": {}, "cohort_missing": [], "online": []}
+            "unlisted": [], "no_room": [], "room_info": {}, "cohorts": {}, "cohort_missing": [], "online": []}
     loaded = False
     for line in text.splitlines():
         f = line.split("\t")
@@ -104,6 +105,8 @@ def parse_report(text, log, solve):
             inst["days"].append(f[1])
         elif tag == "ROOM":
             inst["rooms"].append(f[1])
+            inst["room_info"][f[1]] = {"capacity": int(f[2]), "controlled": f[3] == "1",
+                                       "remote_ready": f[4] == "1"}
         elif tag == "PROF":
             inst["professors"].append(f[1])
         elif tag == "PATTERN":
@@ -114,6 +117,8 @@ def parse_report(text, log, solve):
             inst["courses"].append({"code": f[1], "instructor": f[2], "lab": f[3] == "1"})
         elif tag == "UNLISTED":
             inst["unlisted"].append(f[1])
+        elif tag == "NOROOM":
+            inst["no_room"].append(f[1])
         elif tag == "ONLINE":
             inst["online"].append(f[1])
         elif tag == "COHORT":

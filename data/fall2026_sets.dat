@@ -42,8 +42,16 @@ param instructor :=
   ISE444      Nguyen
   ENGR005     Marangos ;
 
-set ROOMS :=
-  MO121  MO355  MO375  MO451  MO453 ; # should we include online courses?
+# Only rooms where ISE has scheduling permission. MO355/365 (64 seats) is
+# not under ISE control, so it is left out.
+# controlled   = ISE has scheduling permission (only these are guaranteed)
+# remote_ready = equipped for courses with a remote async section
+# MO121 is a computing lab. MO451 has 56 seats + 7 tablet-arm chairs.
+param: ROOMS:  capacity  controlled  remote_ready :=
+  MO121          38          1            1
+  MO375          32          1            1
+  MO451          63          1            1
+  MO453          48          1            1 ;
 
 # There are 10 standard time blocks in the day.
 param K := 10;
@@ -109,7 +117,9 @@ set PROF_CLOSED :=
   Yang Thu 4   Zebiane Thu 4   Zhao Thu 4 ;
 
 # preferred teaching times (soft): professor day block
-set PROF_PREF := ;
+# preferences (soft): see PREF_BLOCK / PREF_PATTERN in the model
+set PREF_BLOCK := ;
+set PREF_PATTERN := ;
 
 # ===================== COHORTS =====================
 # (cohort, course number). Same list in every semester; numbers not offered

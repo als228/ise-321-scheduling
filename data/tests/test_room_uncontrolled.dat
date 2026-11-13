@@ -1,0 +1,18 @@
+# Uncontrolled room -- should be infeasible
+# Two rooms give four TR slots for three TR courses, but R2 is not under
+# department control, so only R1's two TR slots are usable.
+set COURSES    := A  B  C ;
+set PROFESSORS := P1  P2  P3 ;
+param: ROOMS: controlled :=
+  R1  1
+  R2  0 ;
+set LABS       := ;
+set DAYS       := Mon  Tue  Wed  Thu  Fri ;
+param K        := 2 ;
+set PATTERNS   := MW  TR ;
+set DAYS_OF[MW] := Mon Wed ;
+set DAYS_OF[TR] := Tue Thu ;
+param instructor := A P1   B P2   C P3 ;
+set ALLOWED_PATTERNS[A] := TR ;
+set ALLOWED_PATTERNS[B] := TR ;
+set ALLOWED_PATTERNS[C] := TR ;

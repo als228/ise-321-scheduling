@@ -32,17 +32,28 @@ Web UI: `python3 web/server.py`, then open http://127.0.0.1:8321. It uses only t
   - `x[c,r,p,b]` is for `NONLABS` and takes one block.
   - `y[c,r,p,s]` is for `LABS` and marks the lab's *start* block `s`. A lab takes blocks `s` and `s+1`, so it can only start in `LAB_BLOCKS = 1..K-1`.
 - The clash constraints (`NoRoomClash`, `NoProfClash`) are indexed by **(day, block)**, not by slot. A pattern is spread over its days, and a lab adds to both block `s` and block `s+1`. `X_AT[d,b]` (pairs `(c,p)` for `x`) and `Y_AT[d,b]` (triples `(c,p,s)` for `y`) already do this expansion, so every resource constraint is `sum over X_AT + sum over Y_AT`. New constraints should use them too.
-- **Online courses:** `ONLINE` (subset of `COURSES`, default empty) is placed in the pseudo-room `"Online"` through `ROOMS_OF[c]`. That means `{"Online"}` for online courses and `ROOMS` for the rest, and `x`/`y` are indexed by it. Every per-course room loop must use `r in ROOMS_OF[c]`, not `r in ROOMS`. Constraints about physical rooms (`NoRoomClash`, `DeptRoomClosed`, and the future capacity rule) loop over `ROOMS` and skip `c in ONLINE`. Everything else still applies to online courses: professor clash, cohorts, department closures, professor availability and the score. In the web UI they appear in "Online" rows of the timetable (one row per course meeting at the same time) and are left out of the "Room use" percentage.
+- **Room eligibility lives in `ROOMS_OF[c]`**, and `x`/`y` are indexed by it, so a room a course can't use never becomes a variable. Every per-course room loop must use `r in ROOMS_OF[c]`, not `r in ROOMS`. Constraints about one physical room (`NoRoomClash`, `DeptRoomClosed`) loop over `ROOMS` and keep only courses with `r in ROOMS_OF[c]` (this also drops online courses). New room rules should be filters in `ROOMS_OF`, not new constraints. The filters:
+  - **Online:** `ONLINE` courses (default empty) get the pseudo-room `{"Online"}` and skip every other rule. Everything else still applies to them: professor clash, cohorts, department closures, professor availability and the score. In the web UI they appear in "Online" rows of the timetable (one row per course meeting at the same time) and are left out of the "Room use" percentage.
+  - **Room table:** `param: ROOMS: capacity controlled remote_ready`. The defaults (`0`, `1`, `0`) let a data file list plain `set ROOMS` and have every room usable, which the small tests rely on. `capacity` is shown in the web UI only and isn't enforced (see the to-do list). A course may only use `controlled = 1` rooms, unless a room is dedicated to it.
+  - **Dedicated rooms:** `DEDICATED_TO` holds (room, entry) pairs. An entry is a course name (`ISE308_408` means that course only) or a course number matched like `COHORT_NUMS` (`216` gives `ISE216_L1` and `ISE216_L2`). It applies both ways: a matching course may only use its dedicated rooms, and a dedicated room may only be used by matching courses. Rows for rooms not in `ROOMS` are ignored. `DEDICATED` holds the matched (room, course) pairs.
+  - **Remote async sections:** courses in `REMOTE` (default empty) may only use `remote_ready = 1` rooms.
+  - An in-person course with no eligible room is listed in `NO_ROOM`. The model is then infeasible, and `tests.run` prints a `warning: no eligible room:` line while the web UI shows a callout.
 - **Department rules** are hard constraints driven by data sets, and all of them default to empty: `CLOSED` (day, block), `ROOM_CLOSED` (room, day, block), and `GRAD_CLOSED` (day, block, for `GRAD_COURSES`). `GRAD_COURSES` is derived from course names: any name containing a 4XX number, so cross-listed `ISE334_434` counts.
-- **Professor availability** uses (professor, day, block) triples. `PROF_CLOSED` is hard (`ProfClosed`). `PROF_PREF` is soft: a course earns `W_PREF` (default 1) times the share of its meeting-blocks that fall in its professor's preferred times (`pref_x` / `pref_y`). Unlisted blocks are still allowed. The department's "only these four professors on Thursday block 4" rule is written as `PROF_CLOSED` rows for every other professor, so **a new professor must be added there** unless they're allowed then.
-- **Objective (`maximize Score`):** one-block courses earn `good[b]` based on their assigned block, while two-block courses earn the average of `good[b]` and `good[b+1]`, so each course has a maximum time-quality score of 1. Each same-cohort course pair that overlaps at least once during the week is counted once through `Overlap[h,c1,c2]` and penalized by `W` (default 3). Preferences add up to `W_PREF` per course.
+- **Professor availability:** `PROF_CLOSED` (professor, day, block) is hard (`ProfClosed`). The department's "only these four professors on Thursday block 4" rule is written as `PROF_CLOSED` rows for every other professor, so **a new professor must be added there** unless they're allowed then.
+- **Preferences (soft)** are two weighted tables, read as tabular `param: SET: param` blocks:
+  - `PREF_BLOCK` (who, block, weight) goes from −1 (avoid) to 1 (want). Unlisted blocks are 0.
+  - `PREF_PATTERN` (who, pattern, weight) goes from 0 to 1. If someone lists any pattern, their unlisted patterns get 0. With no pattern rows, every pattern gets 1. It only scales `PREF_BLOCK`.
+  - `who` is a professor (applies to all their courses) or a course. If a course has any row of its own, its professor's rows are ignored for it (`PREF_COURSES`, `pref_key`). Professor and course names must not overlap, which a `check` enforces.
+  - A course earns `W_PREF` × pattern weight × block weight (`pref_x` / `pref_y`; a two-block meeting averages its two blocks), so between −`W_PREF` and `W_PREF`. Days aren't keyed separately, because the pattern carries them.
+  - The Spring 2027 rows come from faculty requests. Derya is assumed to be Pamukcu, and Nyberg's new project management course is assumed to be ISE336_436. Zimmers' ISE254 TR 12:10 can't be met, because Tue block 4 is `CLOSED`.
+- **Objective (`maximize Score`):** one-block courses earn `good[b]` based on their assigned block, while two-block courses earn the average of `good[b]` and `good[b+1]`, so each course has a maximum time-quality score of 1. Each same-cohort course pair that overlaps at least once during the week is counted once through `Overlap[h,c1,c2]` and penalized by `W` (default 3). Preferences add between −`W_PREF` and `W_PREF` per course.
 - **Cohorts** come from `COHORT_NUMS`, which is a list of (cohort, course number) pairs. A number matches every course whose name contains it as a whole number, so `172` gives `ISE172` and `ISE172_L`. That lets the same list go in every semester. `IN_COHORT` holds the matched (cohort, course) pairs, and `COHORT_MISSING` lists numbers not offered this term. That is expected for semester-specific courses; `tests.run` prints them as `not offered:` and the web UI shows them in a Cohorts callout.
 - `instructor[c]` fixes the professor for each course. `SECTIONS_OF[f]` is derived from it.
 - `ALLOWED_PATTERNS[c]` (from the data) limits the patterns a course may use, and `PATTERNS_OF[c]` is the set actually used. A course with no entry falls back to every pattern and is listed in `UNLISTED`. `tests.run` prints it as a `warning:` line and the web UI shows it as a callout. Because `SLOTS[c]` and `LAB_SLOTS[c]` are indexed by course, loops over assignments must use `(p,b) in SLOTS[c]`.
 
 ## Data
 
-- `data/fall2026_sets.dat` and `data/spring2027.dat` are the real instances (Tests 0 and 7). Spring uses `K = 8` and adds rooms MO171 (ManTech lab) and PA416. Cross-listed courses (for example 334/434) are merged into one course, such as `ISE334_434`, because they share a room, an instructor and a time.
+- `data/fall2026_sets.dat` and `data/spring2027.dat` are the real instances (Tests 0 and 7). Both use only the four rooms ISE controls (MO121 computing lab, MO375, MO451, MO453), and all four are remote-ready. MO355/365 isn't under ISE control and is left out. Spring uses `K = 8` and adds two uncontrolled rooms through `DEDICATED_TO`: MO171 (ManTech, only for 216) and PA416 (Packard, only for the `ISE308_408` lecture, the largest class). Each semester file carries its own copy of the room table. Room capacities: MO121 38, MO171 25, MO355/365 64, MO375 32, MO451 63 (56 seats plus 7 tablet-arm chairs), MO453 48, PA416 139. Cross-listed courses (for example 334/434) are merged into one course, such as `ISE334_434`, because they share a room, an instructor and a time.
 - `data/tests/*.dat` are small instances. Each one is built to be feasible or infeasible on purpose, and the comment at the top says which constraint it tests. `tests.run` prints the expected result next to `solve_result`.
 - The model is the source of truth for names. Data files supply `param K` and `param instructor`, never `BLOCKS` or `SLOTS`, because the model computes those. The model requires `K > 1`, so a clash test must have more courses than the available blocks or rooms can hold. A single-block setup is not allowed.
 ## Web UI (`web/`)
@@ -55,7 +66,7 @@ Web UI: `python3 web/server.py`, then open http://127.0.0.1:8321. It uses only t
 
 ## Conventions
 
-- **AMPL segfaults (exit 139) on `reset data` + `solve`** if the model has a set indexed over another *data* set (e.g. `set S {CLOSED}`) and a constraint tests membership in it. `tests.run` resets data between cases, so this kills the whole suite after Test 0 with no error message. Use a flat tuple set instead (as `PROF_CLOSED` and `PROF_PREF` do).
+- **AMPL segfaults (exit 139) on `reset data` + `solve`** if the model has a set indexed over another *data* set (e.g. `set S {CLOSED}`) and a constraint tests membership in it. `tests.run` resets data between cases, so this kills the whole suite after Test 0 with no error message. Use a flat tuple set instead (as `PROF_CLOSED`, `PREF_BLOCK` and `PREF_PATTERN` do).
 
 - `BLOCKS` is a numeric range, not an ordered set, so output code should use `b + 1` rather than `next(b, BLOCKS)`.
 
@@ -63,25 +74,14 @@ Web UI: `python3 web/server.py`, then open http://127.0.0.1:8321. It uses only t
 
 Done: early/late block scores, professor closed times and preferences, same-cohort course-pair overlaps, online courses, and the department rules (hard). Time-quality terms are scored per course rather than per meeting occurrence; `X_AT`/`Y_AT` are still used for constraints that need to know which courses are active at each day/block.
 
-### Room properties (planned design, not built)
+### Rooms (remaining)
 
-Every room rule below should be a **filter on `ROOMS_OF[c]`**, not a new constraint. A room a course can't use never becomes a variable. All room eligibility then lives in one definition, and `NoRoomClash` stays unchanged. Online courses keep `{"Online"}` and skip every room rule.
+Built: the room table, the controlled-room rule, dedicated rooms, remote-ready rooms and the "no eligible room" warning (see Model structure). Still open:
 
-0. **"No eligible room" warning (build first).** With filters, a course whose room list ends up empty makes the model infeasible with no hint. Add a derived set of such courses and report it like `UNLISTED`: as a `warning:` in `tests.run` and as a callout in the web UI.
-1. **Room table.** One row per room with `capacity`, `hybrid` (0/1) and `lab_ok` (0/1), read as an AMPL tabular `param:` block. Room data doesn't change, but copy it into each semester file for now (the web UI and `tests.run` load one file). Move it to a shared `rooms.dat` only if the copies drift apart.
-2. **Capacity (hard).** A course may only use rooms with `capacity >= enrollment`.
-   - `enrollment` is per semester and lives in each semester file. Use the **registrar's enrollment cap**, not actual enrollment, since the cap is known before registration. Cross-listed courses use their combined cap.
-   - **Placeholder:** `capacity = 50` for every room until real counts arrive (the user is asking their supervisor). Courses with a cap above 50 will have no eligible room, which is what item 0 catches.
-   - **SMALL/MEDIUM/BIG size classes:** use them only to fill in `capacity` (each class's *guaranteed* seat count, e.g. small = 30) and keep the numbers in the model. Comparing categories directly is wrong: a 35-student "medium" course and a 31-seat "medium" room match by category but don't fit.
-   - Open: may a course go slightly over capacity? What happens to a course with no enrollment (any room plus a warning, or an error)?
-3. **Wasted seats (soft, optional).** Penalize the share of empty seats, `(capacity − enrollment) / capacity`, times a weight, so each course costs at most that weight. This matches the per-course scoring.
-4. **Hybrid rooms.** MO121, MO451 and MO453 are hybrid. The rest are 0 until confirmed by the user's supervisor.
-   - Courses needing a hybrid room: an explicit set (preferred), possibly drafted from a rule such as "all 4XX". A hybrid course may only use hybrid rooms.
-   - Open: does capacity count only in-person students for hybrid courses (two enrollment numbers)? Should regular courses be softly steered away from hybrid rooms to keep them free? Do online courses ever need a hybrid room to broadcast from?
-5. **Lab rooms.** `LABS` means "two-block meeting" (how long it lasts), which is **not** the same as "needs lab equipment". `ISE254_W` and `ISE382_482` are two-block meetings in regular rooms, and `ISE308_408_L` is one block. Add a separate course set for "needs a lab room" (it could start as a copy of `LABS` and then be fixed by hand). Such a course may only use rooms with `lab_ok = 1`.
-   - Open: which courses need a lab room besides 216? Should lectures be kept out of lab rooms in general (a per-room "lab only" flag)?
-6. **Dedicated rooms.** MO171 (ManTech) is only for ISE216, and ISE216 may only use MO171. Add a (room, course number) list matched by number like `COHORT_NUMS`, so `216` covers `ISE216_L1` and `ISE216_L2`. It applies in both directions: a matching course may only use that room, and that room may only be used by matching courses. MO171 is only in the Spring room list, so Fall is unaffected.
-   - Open: is PA416 dedicated to 308/408, or is that just where it was placed?
+1. **Capacity (not enforced on purpose).** ISE has no fixed enrollment caps. Registration opens at 30 or 40 and the cap grows until it reaches room capacity, so the room sets the cap rather than the other way round. `capacity` is stored and shown. If big courses need steering to big rooms, prefer a soft "expected size" score (or a `DEDICATED_TO` row, as with 308/408 and PA416) over a hard `capacity >= enrollment` rule.
+2. **`REMOTE` list.** It's empty, and every ISE room is remote-ready, so the rule has no effect yet. It's there for new rooms or other departments. Fill it in once the courses with remote async sections are known.
+3. **Lab rooms.** `LABS` means "two-block meeting" (how long it lasts), which is not the same as "needs lab equipment". `ISE254_W` and `ISE382_482` are two-block meetings in regular rooms. If some courses need the MO121 computing lab, add a course set and a room flag, filtered in `ROOMS_OF` like `REMOTE`.
+4. **Shared room file.** Move the room table to a shared `rooms.dat` only if the per-semester copies drift apart (the web UI and `tests.run` load one file).
 
 ### Recitations (planned, not built)
 
@@ -95,11 +95,8 @@ Every room rule below should be a **filter on `ROOMS_OF[c]`**, not a new constra
 
 ### Other
 
-8. **Professor data:** fill `PROF_CLOSED` and `PROF_PREF` once availability is collected.
+8. **Professor data:** Spring 2027 preferences are in. Fall has none yet. Requests can be per course, so write course-specific ones against the course (`ISE240 4 1`), not the professor.
 9. **Graded block scores** (for example block 7 less bad than block 10): override `good[b]` in data.
-10. **Weights:** `W` (cohort overlap) is 3 and `W_PREF` is 1 for now. Tune them once more terms exist.
+10. **Weights:** `W` (cohort overlap) is 3 and `W_PREF` is 1 for now. A preferred evening block (`good` = 0, preference = 1) ties with an unpreferred daytime block, so the evening side of preferences like Paredes' "after 5 PM" can win arbitrarily. Tune `W_PREF` against `good[b]`.
 11. **`CLOSED` and online courses:** `CLOSED` currently blocks online courses too. That assumes the closed times are department-wide events, not just room shortages, so confirm it.
-12. **Data to collect** (from the user's supervisor):
-    - seat counts and hybrid status for MO121, MO171, MO355, MO375, MO451, MO453 and PA416;
-    - enrollment caps per course for each semester;
-    - which courses are hybrid, which need a lab room, and which have recitations.
+12. **Data to collect** (from the user's supervisor): which courses have a remote async section, which need the computing lab, and which have recitations.

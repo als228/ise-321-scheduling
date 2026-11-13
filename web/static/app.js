@@ -570,6 +570,12 @@ function gridHTML({ cols, rows, rowLabel, colLabel, corner, colWidth, labelWidth
 
 const blockRange = (K) => Array.from({ length: K }, (_, i) => i + 1);
 
+// room name, plus its seat count when the data gives one
+function roomLabel(inst, r) {
+  const cap = inst.room_info?.[r]?.capacity;
+  return cap ? `${esc(r)} <span class="muted small">${cap}</span>` : esc(r);
+}
+
 function timetableView({ inst, items, color }) {
   const days = state.sched.day === "all" ? inst.days : [state.sched.day];
   return days.map((d) => {
@@ -582,7 +588,7 @@ function timetableView({ inst, items, color }) {
     return `
       <div class="day-block">
         <div class="day-title"><h3>${esc(dayName(d))}</h3><span>${today.length} meeting${today.length === 1 ? "" : "s"}</span></div>
-        ${gridHTML({ cols: blockRange(inst.K), rows, rowLabel: esc, colLabel: timeLabel,
+        ${gridHTML({ cols: blockRange(inst.K), rows, rowLabel: (r) => roomLabel(inst, r), colLabel: timeLabel,
                      corner: "Room", colWidth: "104px", labelWidth: "96px", items: chips })}
       </div>`;
   }).join("");
@@ -686,6 +692,12 @@ function renderSchedule() {
       <p>${inst.unlisted.map(esc).join(", ")} ${inst.unlisted.length === 1 ? "has" : "have"} no <code>ALLOWED_PATTERNS</code>
       entry in the data, so the model lets ${inst.unlisted.length === 1 ? "it" : "them"} use every pattern.</p></div></div>` : "";
 
+  const noRoom = inst && inst.no_room && inst.no_room.length ? `<div class="callout warn"><div class="mark">!</div><div>
+      <h3>${inst.no_room.length} course${inst.no_room.length === 1 ? " has" : "s have"} no eligible room</h3>
+      <p>${inst.no_room.map(esc).join(", ")} can't use any room after the room rules (<code>controlled</code>,
+      <code>DEDICATED_TO</code>, <code>REMOTE</code>), so the model is infeasible. Check the room table or the course's
+      dedicated rooms.</p></div></div>` : "";
+
   // cohort membership, plus course numbers not offered this term (expected for
   // semester-specific courses, so this is informational, not a warning)
   const cohortNames = inst ? Object.keys(inst.cohorts || {}) : [];
@@ -743,7 +755,7 @@ function renderSchedule() {
       </div></div>`;
   }
 
-  el.innerHTML = `<div class="stack">${header}${unlisted}${cohorts}${body}</div>`;
+  el.innerHTML = `<div class="stack">${header}${noRoom}${unlisted}${cohorts}${body}</div>`;
   bindSchedule(el, d);
 }
 

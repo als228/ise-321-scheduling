@@ -23,8 +23,24 @@ set PROFESSORS :=
   Pamukcu  Paredes  Perevalov  Ralphs  Shabnam  Terlaky  Tosin  Zimmers  Zuluaga ;
 
 # ===================== ROOMS =====================
-# MO171 = ManTech lab, PA416 = outside Mohler (used by 308/408)
-set ROOMS := MO121  MO171  MO375  MO451  MO453  PA416 ;
+# controlled   = ISE has scheduling permission (only these are guaranteed)
+# remote_ready = equipped for courses with a remote async section
+# MO121 is a computing lab. MO451 has 56 seats + 7 tablet-arm chairs.
+# MO171 (ManTech) and PA416 (Packard) are outside ISE control and are only
+# used through DEDICATED_TO below.
+param: ROOMS:  capacity  controlled  remote_ready :=
+  MO121          38          1            1
+  MO171          25          0            0
+  MO375          32          1            1
+  MO451          63          1            1
+  MO453          48          1            1
+  PA416         139          0            0 ;
+
+# 216 = every 216 section (ISE216_L1, ISE216_L2); ISE308_408 = the lecture
+# only (its _L and _W meetings stay in ISE rooms). Both directions apply.
+set DEDICATED_TO :=
+  MO171  216
+  PA416  ISE308_408 ;
 
 # ===================== TIME =====================
 set DAYS := Mon  Tue  Wed  Thu  Fri ;
@@ -96,7 +112,7 @@ set ALLOWED_PATTERNS[ISE355_455] := MW TR ;
 set ALLOWED_PATTERNS[ISE362_462] := MW TR ;
 set ALLOWED_PATTERNS[ISE365_465] := MW TR ;
 set ALLOWED_PATTERNS[ISE371_471] := MW TR ;
-set ALLOWED_PATTERNS[ISE411]     := MW ;      # Goldberg request (TTh -> MW)
+set ALLOWED_PATTERNS[ISE411]     := MW TR ;   # Goldberg: MW preferred, TR fallback (see PREF_PATTERN)
 set ALLOWED_PATTERNS[ISE417]     := MW TR ;
 set ALLOWED_PATTERNS[ISE418]     := MW TR ;
 set ALLOWED_PATTERNS[ISE456]     := MW TR ;
@@ -132,8 +148,47 @@ set PROF_CLOSED :=
   Paredes Thu 4   Ralphs Thu 4   Shabnam Thu 4   Terlaky Thu 4
   Tosin Thu 4 ;
 
-# preferred teaching times (soft): professor day block
-set PROF_PREF := ;
+# ===================== PREFERENCES (soft) =====================
+# From faculty requests for Spring 2027. Rows are keyed by professor (all
+# their courses) or by course (that course only; overrides the professor).
+# Blocks: 1 = 7:55  2 = 9:20  3 = 10:45  4 = 12:10  5 = 1:35  6 = 3:00
+#         7 = 4:25  8 = 5:50.  Weight: 1 = want, 0.5 = OK, -1 = avoid.
+param: PREF_BLOCK: pref_block :=
+  # Pamukcu (Derya): afternoons, late afternoon OK; none before 10:45
+  Pamukcu 1 -1   Pamukcu 2 -1   Pamukcu 5 1   Pamukcu 6 1   Pamukcu 7 1
+  # Paredes: lunch (12:10) or after 5 PM; day doesn't matter
+  Paredes 4 1   Paredes 8 1
+  # Zhao: ISE240 MW 12:10, as in Spring 2026
+  ISE240 4 1
+  # Zuluaga: ISE347/447 TR 3:00, as in Spring 2026 (flexible)
+  ISE347_447 6 1
+  # Nyberg: 4:25-7:05 one evening a week (assumed to be ISE336/436)
+  ISE336_436 7 1   ISE336_436 8 1
+  # Perevalov: morning to noon, MW or TR
+  Perevalov 1 1   Perevalov 2 1   Perevalov 3 1   Perevalov 4 1
+  # Terlaky: TR afternoons
+  Terlaky 5 1   Terlaky 6 1   Terlaky 7 1   Terlaky 8 1
+  # Goldberg: ISE411 afternoons, MW first, else TR
+  Goldberg 5 1   Goldberg 6 1   Goldberg 7 1   Goldberg 8 1
+  # Ralphs: ISE172 later than 9:20, ideally 12-4; ISE418 early afternoon
+  ISE172 3 0.5   ISE172 4 1   ISE172 5 1   ISE172 6 1
+  ISE418 4 1   ISE418 5 1   ISE418 6 0.5
+  # Curtis: TR late morning or afternoon, ending before 5 PM
+  Curtis 3 1   Curtis 4 1   Curtis 5 1   Curtis 6 1
+  # Zimmers: as in Spring 2026. ISE254 TR 12:10 (note: Tue 4 is CLOSED),
+  # ISE254 lab F 10:45-1:25, ISE382/482 F 1:35-4:15
+  ISE254 4 1
+  ISE254_W 3 1   ISE254_W 4 1
+  ISE382_482 5 1   ISE382_482 6 1 ;
+
+param: PREF_PATTERN: pref_pattern :=
+  ISE240 MW 1
+  ISE347_447 TR 1
+  Perevalov MW 1   Perevalov TR 1
+  Terlaky TR 1
+  Goldberg MW 1   Goldberg TR 0.5
+  Curtis TR 1
+  ISE254 TR 1   ISE254_W F 1   ISE382_482 F 1 ;
 
 # ===================== COHORTS =====================
 # (cohort, course number). Same list in every semester; numbers not offered
